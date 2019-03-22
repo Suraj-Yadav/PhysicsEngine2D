@@ -1,0 +1,97 @@
+Renderer.1 {
+    backgroundcolor = #00000000;
+    bordercolor = #3C3C3C;
+    borders = (0, 0, 0, 0);
+    textcolor = #3C3C3C;
+}
+
+CheckBox."checkbox" {
+    Position = (560, 40);
+    Size = (18, 18);
+    Text = "Show Bounding Boxes";
+    TextSize = 13;
+
+    Renderer {
+        backgroundcolor = #F5F5F5;
+        backgroundcolorhover = #00000000;
+        bordercolor = #3C3C3C;
+        bordercolorhover = #00000000;
+        borders = (1, 1, 1, 1);
+        checkcolor = #3C3C3C;
+        checkcolorhover = #00000000;
+        textcolor = #3C3C3C;
+        textcolorhover = #00000000;
+        textdistanceratio = 0.2;
+        texturechecked = None;
+        texturecheckeddisabled = None;
+        texturecheckedhover = None;
+        texturefocused = None;
+        textureunchecked = None;
+        textureuncheckeddisabled = None;
+        textureuncheckedhover = None;
+    }
+}
+
+Button."resetButton" {
+    Position = (80, 40);
+    Size = (55, 22);
+    Text = "Reset";
+    TextSize = 13;
+
+    Renderer {
+        backgroundcolor = #F5F5F5;
+        backgroundcolordown = #EBEBEB;
+        backgroundcolorhover = #00000000;
+        bordercolor = #3C3C3C;
+        bordercolordown = #00000000;
+        bordercolorhover = #00000000;
+        borders = (1, 1, 1, 1);
+        textcolor = #3C3C3C;
+        textcolordown = #00000000;
+        textcolorhover = #00000000;
+        texture = None;
+        texturedisabled = None;
+        texturedown = None;
+        texturefocused = None;
+        texturehover = None;
+    }
+}
+
+Slider."slider" {
+    Maximum = 100;
+    Minimum = 0;
+    Position = (230, 40);
+    Size = (200, 16);
+    Value = 0;
+
+    Renderer {
+        bordercolor = #3C3C3C;
+        bordercolorhover = #00000000;
+        borders = (1, 1, 1, 1);
+        texturethumb = None;
+        texturethumbhover = None;
+        texturetrack = None;
+        texturetrackhover = None;
+        thumbcolor = #F5F5F5;
+        thumbcolorhover = white;
+        trackcolor = #F5F5F5;
+        trackcolorhover = white;
+    }
+}
+
+Label."coeffLabel" {
+    Position = (440, 40);
+    Size = (43.2, 18);
+    Text = "0.9";
+    TextSize = 13;
+    renderer = &1;
+}
+
+Label."label" {
+    AutoSize = true;
+    Position = (230, 10);
+    Size = (162.2, 18);
+    Text = "Coefficient of Restitution";
+    TextSize = 13;
+    renderer = &1;
+}
