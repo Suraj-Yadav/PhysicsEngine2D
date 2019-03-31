@@ -82,7 +82,7 @@ int main() {
 	auto slider = gui.get<tgui::Slider>("slider");
 	auto coeffLabel = gui.get<tgui::Label>("coeffLabel");
 
-	if (showBox) checkbox->check();
+	checkbox->setChecked(showBox);
 
 	slider->setValue(sim.restitutionCoeff * 100);
 	slider->connect("ValueChanged", [&coeffLabel, &sim](float value) {
