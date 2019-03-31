@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory>
 #include <random>
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "Shapes.hpp"
@@ -21,6 +21,16 @@ class ForceField {
 	Vector2D getForce(const DynamicShape &obj) { return func(obj, *this); }
 	void setPos(const Vector2D &p) {
 		pos = p;
+	}
+};
+
+struct pair_hasher {
+	template <class T1, class T2>
+	std::size_t operator()(std::pair<T1, T2> const &pair) const {
+		std::size_t h1 = std::hash<T1>()(pair.first);
+		std::size_t h2 = std::hash<T2>()(pair.second);
+
+		return h1 * 10000 + h2;
 	}
 };
 
@@ -42,7 +52,7 @@ class Simulator {
 
 	void addForceField(const ForceField forceField);
 
-	void simulate(float delta, const std::set<std::pair<int, int>> &gravPairs);
+	void simulate(float delta, const std::unordered_set<std::pair<int, int>, pair_hasher> &gravPairs);
 };
 
 #endif  // SIMULATION_H_INCLUDED

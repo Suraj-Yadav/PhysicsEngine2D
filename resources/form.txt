@@ -1,5 +1,5 @@
 Renderer.1 {
-    backgroundcolor = #00000000;
+    backgroundcolor = transparent;
     bordercolor = #3C3C3C;
     borders = (0, 0, 0, 0);
     textcolor = #3C3C3C;
@@ -13,21 +13,27 @@ CheckBox."checkbox" {
 
     Renderer {
         backgroundcolor = #F5F5F5;
-        backgroundcolorhover = #00000000;
+        backgroundcolordisabled = #E6E6E6;
+        backgroundcolorhover = white;
         bordercolor = #3C3C3C;
-        bordercolorhover = #00000000;
+        bordercolordisabled = #7D7D7D;
+        bordercolorfocused = #1E1EB4;
+        bordercolorhover = black;
         borders = (1, 1, 1, 1);
         checkcolor = #3C3C3C;
-        checkcolorhover = #00000000;
+        checkcolordisabled = #7D7D7D;
+        checkcolorhover = black;
         textcolor = #3C3C3C;
-        textcolorhover = #00000000;
+        textcolordisabled = #7D7D7D;
+        textcolorhover = black;
         textdistanceratio = 0.2;
         texturechecked = None;
         texturecheckeddisabled = None;
+        texturecheckedfocused = None;
         texturecheckedhover = None;
-        texturefocused = None;
         textureunchecked = None;
         textureuncheckeddisabled = None;
+        textureuncheckedfocused = None;
         textureuncheckedhover = None;
     }
 }
@@ -40,15 +46,19 @@ Button."resetButton" {
 
     Renderer {
         backgroundcolor = #F5F5F5;
+        backgroundcolordisabled = #E6E6E6;
         backgroundcolordown = #EBEBEB;
-        backgroundcolorhover = #00000000;
+        backgroundcolorhover = white;
         bordercolor = #3C3C3C;
-        bordercolordown = #00000000;
-        bordercolorhover = #00000000;
+        bordercolordisabled = #7D7D7D;
+        bordercolordown = black;
+        bordercolorfocused = #1E1EB4;
+        bordercolorhover = black;
         borders = (1, 1, 1, 1);
         textcolor = #3C3C3C;
-        textcolordown = #00000000;
-        textcolorhover = #00000000;
+        textcolordisabled = #7D7D7D;
+        textcolordown = black;
+        textcolorhover = black;
         texture = None;
         texturedisabled = None;
         texturedown = None;
@@ -58,15 +68,17 @@ Button."resetButton" {
 }
 
 Slider."slider" {
+    InvertedDirection = false;
     Maximum = 100;
     Minimum = 0;
     Position = (230, 40);
     Size = (200, 16);
+    Step = 1;
     Value = 0;
 
     Renderer {
         bordercolor = #3C3C3C;
-        bordercolorhover = #00000000;
+        bordercolorhover = black;
         borders = (1, 1, 1, 1);
         texturethumb = None;
         texturethumbhover = None;
@@ -80,7 +92,9 @@ Slider."slider" {
 }
 
 Label."coeffLabel" {
-    Position = (440, 40);
+    AutoSize = true;
+    ScrollbarPolicy = Never;
+	Position = (440, 40);
     Size = (43.2, 18);
     Text = "0.9";
     TextSize = 13;
@@ -89,7 +103,8 @@ Label."coeffLabel" {
 
 Label."label" {
     AutoSize = true;
-    Position = (230, 10);
+    ScrollbarPolicy = Never;
+	Position = (230, 10);
     Size = (162.2, 18);
     Text = "Coefficient of Restitution";
     TextSize = 13;

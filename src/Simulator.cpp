@@ -128,7 +128,7 @@ bool Simulator::manageCollision(Particle &b, Line &l, float delTime) {
 	}
 	return false;
 }
-void Simulator::simulate(float seconds, const std::set<std::pair<int, int>> &gravPairs) {
+void Simulator::simulate(float seconds, const std::unordered_set<std::pair<int, int>, pair_hasher> &gravPairs) {
 	const float delta = seconds / subStep;
 	for (unsigned step = 0; step < subStep; ++step) {
 		int i = 0;
@@ -172,6 +172,7 @@ void Simulator::simulate(float seconds, const std::set<std::pair<int, int>> &gra
 			i++;
 		}
 		auto possibleCollisions = getCollisions();
+		// println(possibleCollisions.size());
 
 		for (auto &p : possibleCollisions) {
 			int i = p.first, j = p.second;

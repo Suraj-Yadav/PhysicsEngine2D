@@ -25,6 +25,7 @@ target_compile_options(PhysicsEngine2D PRIVATE -Wpedantic -Wextra -Wall -Wunused
 
 if(CMAKE_BUILD_TYPE STREQUAL "Profile")
 	target_compile_options(PhysicsEngine2D PRIVATE -pg)
+	target_link_options(PhysicsEngine2D PRIVATE -pg)
 endif()
 
 

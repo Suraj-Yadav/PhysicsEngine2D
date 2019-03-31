@@ -24,7 +24,7 @@ template <typename T> inline void printC(T t) { for (auto &elem : t) print(elem,
 // clang-format on
 
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
-	return 100 * unit(f.pos - a.pos) * a.mass / lenSq(a.pos - f.pos);
+	return 6.67408e-11 * unit(f.pos - a.pos) * a.mass / lenSq(a.pos - f.pos);
 }
 
 int main() {
@@ -32,32 +32,35 @@ int main() {
 
 	auto sim = Simulator(10, 0.9f);
 
-	const float BOTTOM = -300, LEFT = -400, RIGHT = 400, TOP = 300;
+	const float BOTTOM = -30, LEFT = -40, RIGHT = 40, TOP = 30;
 	const float PAD = 10;
 	const int W = 1000, H = 800;
 
-	sim.addObject(new Line({-400, -200}, {400, -200}, {0, 0}));
-	sim.addObject(new Line({-400, -200}, {-400, 300}, {0, 0}));
-	sim.addObject(new Line({400, -200}, {400, 300}, {0, 0}));
-	sim.addObject(new Line({-400, 300}, {400, 300}, {0, 0}));
+	sim.addObject(new Line({-40, -20}, {40, -20}, {0, 0}));
+	sim.addObject(new Line({-40, -20}, {-40, 30}, {0, 0}));
+	sim.addObject(new Line({40, -20}, {40, 30}, {0, 0}));
+	sim.addObject(new Line({-40, 30}, {40, 30}, {0, 0}));
 
-	std::set<std::pair<int, int>> gravPairs;
+	std::unordered_set<std::pair<int, int>, pair_hasher> gravPairs;
 
-	for (int j = -300; j < -290; j += 5) {
-		for (int i = -180; i < 280; i += 5) {
+	for (double j = -30; j < -22; j += 2) {
+		for (double i = -18; i < 28; i += 2) {
 			gravPairs.insert({sim.objects.size(), sim.forceFields.size()});
-			sim.addObject(new Particle({j, i}, {0.0, 0.0}, 1, 2));
+			sim.addObject(new Particle({j, i}, {0.0, 0.0}, 1, 1));
 			sim.addForceField(ForceField(gravity, {j, i}));
 		}
 	}
+	// sim.addObject(new Particle({0, 1}, {0.0, 0.0}, 1, 0.2));
+	// sim.addObject(new Particle({1, 3}, {0.0, 0.0}, 1, 0.2));
+	// sim.addObject(new Particle({2, 6}, {0.0, 0.0}, 1, 0.2));
 
-	for (int j = -300; j < -295; j += 5) {
-		for (int i = -180; i < 280; i += 5) {
-			gravPairs.insert({sim.objects.size(), sim.forceFields.size()});
-			sim.addObject(new Particle({-j, i}, {0.0, 0.0}, 1, 2));
-			sim.addForceField(ForceField(gravity, {-j, i}));
-		}
-	}
+	// for (int j = -300; j < -295; j += 5) {
+	// 	for (int i = -180; i < 280; i += 5) {
+	// 		gravPairs.insert({sim.objects.size(), sim.forceFields.size()});
+	// 		sim.addObject(new Particle({-j, i}, {0.0, 0.0}, 1, 2));
+	// 		sim.addForceField(ForceField(gravity, {-j, i}));
+	// 	}
+	// }
 
 	// sim.addForceField(ForceField([](const DynamicShape &a, const ForceField &f) {
 	// 	return Vector2D(0.0f, -9.8f) * a.mass;
@@ -73,7 +76,7 @@ int main() {
 
 	bool showBox = false;
 
-	tgui::Gui gui{window};
+	tgui::Gui gui(window);
 
 	gui.loadWidgetsFromFile("G:\\work\\PhysicsEngine2D\\resources\\form.txt");
 
@@ -111,6 +114,7 @@ int main() {
 				}
 				default:
 					gui.handleEvent(event);
+					break;
 			}
 		}
 
@@ -160,7 +164,7 @@ int main() {
 						// window);
 						line({0, 0}, obj->pos, sf::Color::Green, window);
 					}
-					// energy += obj->mass * lenSq(obj->vel) / 2.0 - obj->mass * gravity.y *
+					// energy += obj->mass * lenSq(obj->v) / 2.0 - obj->mass * gravity.y *
 					// obj->pos.y;
 					break;
 				}
@@ -179,6 +183,6 @@ int main() {
 		// window.capture().saveToFile("screenShot.png");
 	}
 	window.close();
-	gui.removeAllWidgets();
+	// gui.removeAllWidgets();
 	return 0;
 }
