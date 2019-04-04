@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.7)
 
 project(PhysicsEngine2D  LANGUAGES CXX)
 
-add_custom_command(OUTPUT include/Constants.hpp
-					COMMAND python scripts/inheritance.py
-					DEPENDS include/Shapes.hpp
-					WORKING_DIRECTORY ../../
+add_custom_target(createConstantsHpp
+					COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/inheritance.py
+					DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/Shapes.hpp
+					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(SRC 
@@ -17,6 +17,7 @@ set(SRC
 
 add_executable(PhysicsEngine2D ${SRC})
 target_include_directories(PhysicsEngine2D PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_dependencies(PhysicsEngine2D createConstantsHpp)
 # include_directories("./include")
 
 set_property(TARGET PhysicsEngine2D PROPERTY CXX_STANDARD 17)

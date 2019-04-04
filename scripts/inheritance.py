@@ -10,11 +10,14 @@ from clang.cindex import CursorKind
 from clang.cindex import Index
 from clang.cindex import Config
 from os import path
+from sys import platform
+
 # from graphviz import Digraph
 
-Config.set_library_file('C:\\Program Files\\LLVM\\bin\\libclang.dll')
-
-# dot = Digraph(comment='The Round Table')
+if platform.startswith('win32'):
+	Config.set_library_file('C:\\Program Files\\LLVM\\bin\\libclang.dll')
+elif 'darwin' in platform:
+	Config.set_library_file('/Library/Developer/CommandLineTools/usr/lib/libclang.dylib')
 
 
 def each_class_cursor(cursor):
@@ -47,7 +50,8 @@ if __name__ == '__main__':
 	# demo parsing the base class and parent class relations
 	# cpp_file_path = os.path.join(kInputsDir, 'main.cpp')
 	index = Index.create()
-	if path.getmtime('include/Shapes.hpp') < path.getmtime('include/Constants.hpp'):
+	if path.exists(
+	    'include/Constants.hpp') and path.getmtime('include/Shapes.hpp') < path.getmtime('include/Constants.hpp'):
 		exit(0)
 	tu = index.parse(b'include/Shapes.hpp')
 	# print(tu.cursor)
@@ -86,7 +90,7 @@ if __name__ == '__main__':
 		print('#define CONSTANTS_H', file=f)
 		print('enum Type {', file=f)
 		for i in tags:
-			print(i.upper(), tags[i])
+			# print(i.upper(), tags[i])
 			print(i.upper(), '=', tags[i], ',', file=f)
 		print('};', file=f)
 		print('#endif // CONSTANTS_H', file=f)
