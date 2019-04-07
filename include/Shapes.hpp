@@ -139,32 +139,6 @@ class Box final : public RigidShape {
 	std::array<Vector2D, 4> corner;
 };
 
-// // box class
-// class Box : public RigidShape {
-// 	inline void updateAABB(double delTime) {
-// 		auto X = std::minmax({corner[0].x, corner[1].x, corner[2].x, corner[3].x});
-// 		auto Y = std::minmax({corner[0].y, corner[1].y, corner[2].y, corner[3].y});
-// 		setBounds(pos.x + X.first + std::min(0.0, delTime * vel.x),
-// 				  pos.y + Y.first + std::min(0.0, delTime * vel.y),
-// 				  pos.x + X.second + std::max(0.0, delTime * vel.x),
-// 				  pos.y + Y.second + std::max(0.0, delTime * vel.y));
-// 	}
-// 	// 	void turn(double angle) {
-// 	// 		double s = std::sin(angle), c = std::cos(angle);
-// 	// 		for (auto &elem : corner) elem = rotate(elem, s, c);
-// 	// 	}
-
-//   public:
-// 	Box(const Vector2D &inititalPosition, const Vector2D &initialVelocity, double mass, double width, double height, double initialAngle = 0, double initialAngularVelocity = 0)
-// 		: RigidShape(inititalPosition, initialVelocity, mass, mass * (width * width + height * height) / 12.0, initialAngle, initialAngularVelocity),
-// 		  w(width), h(height) {
-// 		updateAABB(0);
-// 	}
-// 	~Box() {}
-// 	virtual Type getClass() { return BOX; }
-// 	double w, h;
-// };
-
 class Line final : public BaseShape {
    public:
 	Line() : start(Vector2D(0, 0)), end(Vector2D(1, 0)), normal(Vector2D(0, 0)) {

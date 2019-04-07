@@ -5,6 +5,7 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/OpenGL.hpp>
 #include <sstream>
 
 template <typename T>
@@ -17,7 +18,8 @@ std::string to_string_stream(const T &n) {
 inline sf::Color invert(const sf::Color &c) { return sf::Color(((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255); }
 
 void AABB(double left, double bottom, double right, double top, const sf::Color &col, sf::RenderTarget &window) {
-	static sf::VertexArray lines(sf::LinesStrip, 5);
+	glLineWidth(4);
+	static sf::VertexArray lines(sf::LineStrip, 5);
 	lines[0].position.x = lines[1].position.x = left;
 	lines[2].position.x = lines[3].position.x = right;
 
@@ -29,6 +31,7 @@ void AABB(double left, double bottom, double right, double top, const sf::Color 
 	lines[0].color = lines[1].color = lines[2].color = lines[3].color = lines[4].color = col;
 
 	window.draw(lines);
+	glLineWidth(1);
 }
 
 void quad(const std::array<Vector2D, 4> &pts,

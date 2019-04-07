@@ -44,7 +44,7 @@ class Simulator {
 
    public:
 	float restitutionCoeff;
-	Simulator(unsigned subStep, float restitutionCoeff);
+	Simulator(unsigned subStep = 10, float restitutionCoeff = 1.0f);
 	std::vector<std::shared_ptr<BaseShape>> objects;
 	std::vector<ForceField> forceFields;
 
@@ -52,7 +52,9 @@ class Simulator {
 
 	void addForceField(const ForceField forceField);
 
-	void simulate(float delta, const std::unordered_set<std::pair<int, int>, pair_hasher> &gravPairs);
+	void simulate(float delta);
+
+	void clear();
 };
 
 #endif  // SIMULATION_H_INCLUDED

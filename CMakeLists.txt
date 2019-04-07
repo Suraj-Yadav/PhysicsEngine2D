@@ -33,4 +33,4 @@ endif()
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 find_package(TGUI REQUIRED)
 
-target_link_libraries(PhysicsEngine2D PRIVATE sfml-graphics tgui)
+target_link_libraries(PhysicsEngine2D PRIVATE sfml-graphics tgui opengl32)

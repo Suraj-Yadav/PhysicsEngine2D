@@ -6,8 +6,8 @@
 #include "Simulator.hpp"
 #include "util.hpp"
 
-Simulator::Simulator(unsigned sub_step = 10, float restitution_coeff = 1.0f)
-	: subStep(sub_step), restitutionCoeff(restitution_coeff) {
+Simulator::Simulator(unsigned subStep, float restitutionCoeff)
+	: subStep(subStep), restitutionCoeff(restitutionCoeff) {
 }
 
 void Simulator::addObject(BaseShape *object) {
@@ -128,10 +128,9 @@ bool Simulator::manageCollision(Particle &b, Line &l, float delTime) {
 	}
 	return false;
 }
-void Simulator::simulate(float seconds, const std::unordered_set<std::pair<int, int>, pair_hasher> &gravPairs) {
+void Simulator::simulate(float seconds) {
 	const float delta = seconds / subStep;
 	for (unsigned step = 0; step < subStep; ++step) {
-		int i = 0;
 		for (auto &object : objects) {
 			// switch (object->getClass()) {
 			// 	case PARTICLE: {
@@ -161,15 +160,10 @@ void Simulator::simulate(float seconds, const std::unordered_set<std::pair<int, 
 			if (isTypeof(DYNAMICSHAPE, object->getClass())) {
 				auto obj = static_cast<DynamicShape *>(object.get());
 				obj->move(delta);
-				int j = 0;
 				for (auto &forceField : forceFields) {
-					if (gravPairs.find({i, j}) == gravPairs.end()) {
-						obj->applyImpulse(forceField.getForce(*obj) * delta, obj->pos);
-					}
-					j++;
+					obj->applyImpulse(forceField.getForce(*obj) * delta, obj->pos);
 				}
 			}
-			i++;
 		}
 		auto possibleCollisions = getCollisions();
 		// println(possibleCollisions.size());
@@ -194,4 +188,9 @@ void Simulator::simulate(float seconds, const std::unordered_set<std::pair<int, 
 								*static_cast<Particle *>(objects[i].get()), delta);
 		}
 	}
+}
+
+void Simulator::clear() {
+	this->forceFields.clear();
+	this->objects.clear();
 }

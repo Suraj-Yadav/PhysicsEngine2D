@@ -6,7 +6,7 @@ Renderer.1 {
 }
 
 CheckBox."checkbox" {
-    Position = (560, 40);
+    Position = (20, 100);
     Size = (18, 18);
     Text = "Show Bounding Boxes";
     TextSize = 13;
@@ -39,7 +39,7 @@ CheckBox."checkbox" {
 }
 
 Button."resetButton" {
-    Position = (80, 40);
+    Position = (20, 50);
     Size = (55, 22);
     Text = "Reset";
     TextSize = 13;
@@ -71,8 +71,8 @@ Slider."slider" {
     InvertedDirection = false;
     Maximum = 100;
     Minimum = 0;
-    Position = (230, 40);
-    Size = (200, 16);
+    Position = (20, 170);
+    Size = (190, 16);
     Step = 1;
     Value = 0;
 
@@ -93,20 +93,30 @@ Slider."slider" {
 
 Label."coeffLabel" {
     AutoSize = true;
+    Position = (220, 170);
     ScrollbarPolicy = Never;
-	Position = (440, 40);
-    Size = (43.2, 18);
+    Size = (23.2, 18);
     Text = "0.9";
     TextSize = 13;
     renderer = &1;
 }
 
-Label."label" {
+Label."coeffLabelName" {
     AutoSize = true;
+    Position = (13, 147);
     ScrollbarPolicy = Never;
-	Position = (230, 10);
     Size = (162.2, 18);
     Text = "Coefficient of Restitution";
+    TextSize = 13;
+    renderer = &1;
+}
+
+Label."timeLabel" {
+    AutoSize = true;
+    Position = (20, 20);
+    ScrollbarPolicy = Never;
+    Size = (52.2, 18);
+    Text = "Time: 0 s";
     TextSize = 13;
     renderer = &1;
 }

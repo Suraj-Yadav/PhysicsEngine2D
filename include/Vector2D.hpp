@@ -1,7 +1,7 @@
 #ifndef VECTOR2D_H
 #define VECTOR2D_H
 
-#define DataType double
+#define dataType double
 
 #include <cmath>
 #include <string>
@@ -23,13 +23,13 @@ class Vector2D {
 	/// \param Y Y coordinate
 	///
 	////////////////////////////////////////////////////////////
-	Vector2D(DataType X, DataType Y) : x(X), y(Y) {}
+	Vector2D(dataType X, dataType Y) : x(X), y(Y) {}
 
 	////////////////////////////////////////////////////////////
 	// Member data
 	////////////////////////////////////////////////////////////
-	DataType x;  ///< X coordinate of the vector
-	DataType y;  ///< Y coordinate of the vector
+	dataType x;  ///< X coordinate of the vector
+	dataType y;  ///< Y coordinate of the vector
 };
 
 ////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ inline Vector2D operator-(const Vector2D &left, const Vector2D &right) {
 /// \return Memberwise multiplication by \a right
 ///
 ////////////////////////////////////////////////////////////
-inline Vector2D operator*(const Vector2D &left, DataType right) {
+inline Vector2D operator*(const Vector2D &left, dataType right) {
 	return Vector2D(left.x * right, left.y * right);
 }
 
@@ -135,7 +135,7 @@ inline Vector2D operator*(const Vector2D &left, DataType right) {
 /// \return Memberwise multiplication by \a left
 ///
 ////////////////////////////////////////////////////////////
-inline Vector2D operator*(DataType left, const Vector2D &right) {
+inline Vector2D operator*(dataType left, const Vector2D &right) {
 	return Vector2D(right.x * left, right.y * left);
 }
 
@@ -152,7 +152,7 @@ inline Vector2D operator*(DataType left, const Vector2D &right) {
 /// \return Reference to \a left
 ///
 ////////////////////////////////////////////////////////////
-inline Vector2D &operator*=(Vector2D &left, DataType right) {
+inline Vector2D &operator*=(Vector2D &left, dataType right) {
 	left.x *= right;
 	left.y *= right;
 	return left;
@@ -168,7 +168,7 @@ inline Vector2D &operator*=(Vector2D &left, DataType right) {
 /// \return Memberwise division by \a right
 ///
 ////////////////////////////////////////////////////////////
-inline Vector2D operator/(const Vector2D &left, DataType right) {
+inline Vector2D operator/(const Vector2D &left, dataType right) {
 	return Vector2D(left.x / right, left.y / right);
 }
 
@@ -185,7 +185,7 @@ inline Vector2D operator/(const Vector2D &left, DataType right) {
 /// \return Reference to \a left
 ///
 ////////////////////////////////////////////////////////////
-inline Vector2D &operator/=(Vector2D &left, DataType right) {
+inline Vector2D &operator/=(Vector2D &left, dataType right) {
 	left.x /= right;
 	left.y /= right;
 
@@ -234,7 +234,7 @@ inline bool operator!=(const Vector2D &left, const Vector2D &right) {
 ///
 ///	\return Squared Distance
 ////////////////////////////////////////////////////////////
-inline DataType disSq(const Vector2D &a, const Vector2D &b) {
+inline dataType disSq(const Vector2D &a, const Vector2D &b) {
 	return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
 
@@ -248,7 +248,7 @@ inline DataType disSq(const Vector2D &a, const Vector2D &b) {
 ///
 ///	\return Distance
 ////////////////////////////////////////////////////////////
-inline DataType dis(const Vector2D &a, const Vector2D &b) {
+inline dataType dis(const Vector2D &a, const Vector2D &b) {
 	return std::sqrt(disSq(a, b));
 }
 
@@ -261,7 +261,7 @@ inline DataType dis(const Vector2D &a, const Vector2D &b) {
 ///
 ///	\return Squared Length
 ////////////////////////////////////////////////////////////
-inline DataType lenSq(const Vector2D &a) {
+inline dataType lenSq(const Vector2D &a) {
 	return (a.x * a.x + a.y * a.y);
 }
 
@@ -274,7 +274,7 @@ inline DataType lenSq(const Vector2D &a) {
 ///
 ///	\return Length
 ////////////////////////////////////////////////////////////
-inline DataType len(const Vector2D &a) {
+inline dataType len(const Vector2D &a) {
 	return std::sqrt(lenSq(a));
 }
 
@@ -301,7 +301,7 @@ inline Vector2D unit(const Vector2D &a) {
 ///
 ///	\return Dot Product
 ////////////////////////////////////////////////////////////
-inline DataType dot(const Vector2D &a, const Vector2D &b) {
+inline dataType dot(const Vector2D &a, const Vector2D &b) {
 	return a.x * b.x + a.y * b.y;
 }
 
@@ -315,7 +315,7 @@ inline DataType dot(const Vector2D &a, const Vector2D &b) {
 ///
 ///	\return Dot Product
 ////////////////////////////////////////////////////////////
-inline DataType cross(const Vector2D &a, const Vector2D &b) {
+inline dataType cross(const Vector2D &a, const Vector2D &b) {
 	return a.x * b.y - a.y * b.x;
 }
 
@@ -358,8 +358,8 @@ inline Vector2D projOnUnit(const Vector2D &a, const Vector2D &b) {
 ///
 ///	\return Squared Distance
 ////////////////////////////////////////////////////////////
-inline DataType distFromLine(const Vector2D &start, const Vector2D &end, const Vector2D &pt) {
-	DataType param = dot(pt - start, end - start) / disSq(end, start);
+inline dataType distFromLine(const Vector2D &start, const Vector2D &end, const Vector2D &pt) {
+	dataType param = dot(pt - start, end - start) / disSq(end, start);
 	if (param < 0)
 		return disSq(start, pt);
 	if (param > 1)
