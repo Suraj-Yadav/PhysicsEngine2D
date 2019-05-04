@@ -11,11 +11,12 @@
 inline sf::Color invert(const sf::Color &c) { return sf::Color(((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255); }
 inline sf::Vector2f toVec(const Vector2D &v) { return sf::Vector2f({float(v.x), float(v.y)}); }
 
-DrawUtil::DrawUtil(sf::RenderTarget &window) : window(window),
-											   quads(sf::Quads, 0),
-											   lines(sf::Lines, 0),
-											   circle(50) {
-	if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
+DrawUtil::DrawUtil(sf::RenderTarget &window,
+				   const std::string &fontPath) : window(window),
+												  quads(sf::Quads, 0),
+												  lines(sf::Lines, 0),
+												  circle(50) {
+	if (!font.loadFromFile(fontPath))
 		throw std::runtime_error("Font File not found");
 	text = sf::Text("", font, 30);
 }

@@ -32,5 +32,7 @@ endif()
 
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 find_package(TGUI REQUIRED)
+find_package(Boost 1.66.0 COMPONENTS filesystem)
 
-target_link_libraries(PhysicsEngine2D PRIVATE sfml-graphics tgui opengl32)
+target_include_directories(PhysicsEngine2D PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(PhysicsEngine2D PRIVATE sfml-graphics tgui opengl32 ${Boost_LIBRARIES})

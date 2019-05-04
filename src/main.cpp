@@ -4,19 +4,23 @@
 #include <iostream>
 #include <set>
 
+#include <boost/filesystem.hpp>
+
 #include <TGUI/TGUI.hpp>
 
 #include "Simulator.hpp"
 #include "drawUtil.hpp"
 #include "util.hpp"
 
+namespace fs = boost::filesystem;
+
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
-	return 6.67408e-11 * unit(f.pos - a.pos) * a.mass / lenSq(a.pos - f.pos);
+	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
 }
 
-void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui &gui, Simulator &sim) {
+void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gui, Simulator &sim) {
 	sim.clear();
-	std::ifstream file(filePath);
+	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
@@ -100,8 +104,10 @@ void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui 
 	}
 }
 
-int main() {
+int main(int argc, char **argv) {
 	// NORMAL_IO_SPEEDUP;
+
+	fs::path rootPath(fs::system_complete(fs::path(argv[0])).parent_path().parent_path().parent_path());
 
 	Simulator sim(10, 0.9f);
 
@@ -109,13 +115,13 @@ int main() {
 	settings.antialiasingLevel = 8;
 	sf::RenderWindow window(sf::VideoMode(800, 800), "2131321", sf::Style::Close, settings);
 	tgui::Gui gui(window);
-	initialize("G:\\work\\PhysicsEngine2D\\resources\\init.txt", window, gui, sim);
+	initialize(rootPath / "resources" / "init.txt", window, gui, sim);
 
-	DrawUtil drawUtil(window);
+	DrawUtil drawUtil(window, (rootPath / "fonts" / "Sunda_Prada.ttf").string());
 
 	bool showBox = false;
 
-	gui.loadWidgetsFromFile("G:\\work\\PhysicsEngine2D\\resources\\form.txt");
+	gui.loadWidgetsFromFile((rootPath / "resources" / "form.txt").string());
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
@@ -128,7 +134,7 @@ int main() {
 	checkbox->setChecked(showBox);
 	checkbox->connect({"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
 
-	resetButton->connect("pressed", [&]() { initialize("G:\\work\\PhysicsEngine2D\\resources\\init.txt", window, gui, sim); });
+	resetButton->connect("pressed", [&]() { initialize(rootPath / "resources" / "init.txt", window, gui, sim); });
 
 	restitutionSlider->setValue(sim.restitutionCoeff * 100);
 	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {

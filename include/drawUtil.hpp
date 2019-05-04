@@ -18,7 +18,7 @@ class DrawUtil {
 	sf::CircleShape circle;
 
    public:
-	DrawUtil(sf::RenderTarget &window);
+	DrawUtil(sf::RenderTarget &window, const std::string &fontPath);
 	~DrawUtil();
 
 	void line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, const sf::Color &c2, int width = 0);
