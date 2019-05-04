@@ -6,8 +6,8 @@
 #include "Simulator.hpp"
 #include "util.hpp"
 
-Simulator::Simulator(unsigned subStep, float restitutionCoeff)
-	: subStep(subStep), restitutionCoeff(restitutionCoeff) {
+Simulator::Simulator(unsigned subStep, float restitutionCoeff, float frictionCoeff)
+	: subStep(subStep), restitutionCoeff(restitutionCoeff), frictionCoeff(frictionCoeff) {
 }
 
 void Simulator::addObject(BaseShape *object) {
@@ -62,7 +62,7 @@ std::vector<std::pair<int, int>> Simulator::getCollisions() {
 
 bool Simulator::manageCollision(Particle &first, Particle &second, float delTime) {
 	Vector2D n = second.pos - first.pos;
-	float dist = lenSq(n);
+	float dist = n.lenSq();
 	if (dist <= (first.rad + second.rad) * (first.rad + second.rad)) {
 		auto vRel = second.vel - first.vel;
 		dist = sqrt(dist);
@@ -72,9 +72,8 @@ bool Simulator::manageCollision(Particle &first, Particle &second, float delTime
 			first.vel += dist * n;
 			second.vel -= dist * n;
 		}
-		if (dot(first.vel, n) > dot(second.vel, n)) {
-			auto Impulse = (1 + restitutionCoeff) * projOnUnit(vRel, n) /
-						   (first.invMass + second.invMass);
+		if (first.vel.dot(n) > second.vel.dot(n)) {
+			auto Impulse = (1 + restitutionCoeff) * vRel.projOnUnit(n) / (first.invMass + second.invMass);
 			first.vel += Impulse * first.invMass;
 			second.vel -= Impulse * second.invMass;
 		}
@@ -88,10 +87,14 @@ bool Simulator::manageCollision(Ball &b, Line &l, float delTime) {
 		dist = sqrt(dist) - b.rad;
 		if (dist < 0.0f)
 			b.pos -= dist * l.normal;
-		if (dot(b.vel, l.normal) < 0.0)
-			b.applyImpulse(
-				-(1 + restitutionCoeff) * b.mass * projOnUnit(b.vel, l.normal),
-				b.pos + 0.5 * b.rad * Vector2D(std::cos(b.angle), std::sin(b.angle)));  // commands
+		if (b.vel.dot(l.normal) < 0.0) {
+			const auto normalComp = b.vel.projOnUnit(l.normal), normalImpulse = -(1 + restitutionCoeff) * normalComp;
+			// const auto linearTangentialVelocity = b.vel - normalComp,
+			// radial
+			const auto [tangentialCompMag, tangentialCompDir] = (b.vel - normalComp - b.angVel * b.rad * l.normal.rotate(1, 0)).getMagnitudeAndDirection();
+			const auto frictionImpulse = -frictionCoeff * std::min(normalComp.len(), tangentialCompMag) * tangentialCompDir;
+			b.applyImpulse(normalImpulse + frictionImpulse, b.pos - l.normal * b.rad);
+		}
 		// b.acc += -projOnUnit(b.acc, l.normal);
 		return true;
 	}
@@ -103,9 +106,9 @@ bool Simulator::manageCollision(Box &b, Line &l, float delTime) {
 		dist = sqrt(dist) - sqrt(b.w * b.h);
 		if (dist < 0.0f)
 			b.pos -= dist * l.normal;
-		if (dot(b.vel, l.normal) < 0.0)
+		if (b.vel.dot(l.normal) < 0.0)
 			b.applyImpulse(
-				-(1 + restitutionCoeff) * b.mass * projOnUnit(b.vel, l.normal),
+				-(1 + restitutionCoeff) * b.mass * b.vel.projOnUnit(l.normal),
 				b.pos +
 					0.5 * sqrt(b.w * b.h) *
 						Vector2D(std::cos(b.angle), std::sin(b.angle)));  // commands
@@ -120,9 +123,12 @@ bool Simulator::manageCollision(Particle &b, Line &l, float delTime) {
 		dist = sqrt(dist) - b.rad;
 		if (dist < 0.0f)
 			b.pos -= dist * l.normal;
-		if (dot(b.vel, l.normal) < 0.0)
-			b.applyImpulse(-(1 + restitutionCoeff) * projOnUnit(b.vel, l.normal),
-						   b.pos);  // commands
+		if (b.vel.dot(l.normal) < 0.0) {
+			const auto normalComp = b.vel.projOnUnit(l.normal), normalImpulse = -(1 + restitutionCoeff) * normalComp;
+			const auto [tangentialCompMag, tangentialCompDir] = (b.vel - normalComp).getMagnitudeAndDirection();
+			const auto frictionImpulse = -frictionCoeff * std::min(normalComp.len(), tangentialCompMag) * tangentialCompDir;
+			b.applyImpulse(normalImpulse + frictionImpulse, b.pos);
+		}
 		// b.acc += -projOnUnit(b.acc, l.normal);
 		return true;
 	}
@@ -166,7 +172,6 @@ void Simulator::simulate(float seconds) {
 			}
 		}
 		auto possibleCollisions = getCollisions();
-		// println(possibleCollisions.size());
 
 		for (auto &p : possibleCollisions) {
 			int i = p.first, j = p.second;

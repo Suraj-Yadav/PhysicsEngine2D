@@ -79,7 +79,7 @@ class RigidShape : public DynamicShape {
 	}
 	virtual ~RigidShape() {}
 	void applyImpulse(const Vector2D &imp, const Vector2D &point) {
-		angVel += cross(point - pos, imp) * invInertia;
+		angVel += (point - pos).cross(imp) * invInertia;
 		vel += imp * invMass;
 	}
 	virtual void move(double delTime) {
@@ -113,10 +113,12 @@ class Ball final : public RigidShape {
 // Box class
 class Box final : public RigidShape {
 	void updateAABB(double delTime) {
-		corner[0] = pos + 0.5 * rotate(Vector2D(w, h), angle);
-		corner[1] = pos + 0.5 * rotate(Vector2D(-w, h), angle);
-		corner[2] = pos + 0.5 * rotate(Vector2D(-w, -h), angle);
-		corner[3] = pos + 0.5 * rotate(Vector2D(w, -h), angle);
+		const auto sine = std::sin(angle), cosine = std::cos(angle);
+		auto first = Vector2D(w, h).rotate(sine, cosine), second = Vector2D(-w, h).rotate(sine, cosine);
+		corner[0] = pos + 0.5 * first;
+		corner[1] = pos + 0.5 * second;
+		corner[2] = pos - 0.5 * first;
+		corner[3] = pos - 0.5 * second;
 		auto X = std::minmax({corner[0].x, corner[1].x, corner[2].x, corner[3].x});
 		auto Y = std::minmax({corner[0].y, corner[1].y, corner[2].y, corner[3].y});
 		setBounds(pos.x + X.first + std::min(0.0, delTime * vel.x),
@@ -126,8 +128,8 @@ class Box final : public RigidShape {
 	}
 
    public:
-	Box(const Vector2D &inititalPosition, const Vector2D &initialVelocity, double mass, double width, double height, double initialAngle = 0, double initialAngularVelocity = 0)
-		: RigidShape(inititalPosition, initialVelocity, mass, mass * (width * width + height * height) / 12.0, initialAngle, initialAngularVelocity),
+	Box(const Vector2D &pos, const Vector2D &vel, double mass, double width, double height, double initialAngle = 0, double initialAngularVelocity = 0)
+		: RigidShape(pos, pos, mass, mass * (width * width + height * height) / 12.0, initialAngle, initialAngularVelocity),
 		  w(width),
 		  h(height) {
 		updateAABB(0);
@@ -141,14 +143,10 @@ class Box final : public RigidShape {
 
 class Line final : public BaseShape {
    public:
-	Line() : start(Vector2D(0, 0)), end(Vector2D(1, 0)), normal(Vector2D(0, 0)) {
-		setBounds(0.0, 0.0, 1.0, 0.0);
-	}
-	Line(const Vector2D &a, const Vector2D &b, const Vector2D &pointOnSide)
+	Line(const Vector2D &a, const Vector2D &b)
 		: start(a),
 		  end(b),
-		  normal(unit(((pointOnSide - start) * lenSq(end - start)) -
-					  (end - start) * dot(end - start, pointOnSide - start))) {
+		  normal((b - a).rotate(1, 0).unit()) {
 		setBounds(std::min(start.x, end.x) - 0.05, std::min(start.y, end.y) - 0.05,
 				  std::max(start.x, end.x) + 0.05, std::max(start.y, end.y) + 0.05);
 	}

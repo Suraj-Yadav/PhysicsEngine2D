@@ -8,25 +8,11 @@
 
 #include "Simulator.hpp"
 #include "drawUtil.hpp"
+#include "util.hpp"
 
-// clang-format off
-using std::cout;
-using std::cin;
-#define newline '\n'
-inline void print() {}
-template <typename T> void print(T t) { cout<<t; }
-template <typename T, typename... Args> void print(T t, Args... args) { cout << t << " "; print(args...); }
-template <typename... Args> void println(Args... args) { print(args...); cout<<newline; }
-inline void printF(const char *&format) { cout << format; }
-template <typename T, typename... Args> void printF(const char *format, T t, Args... args) {
-while (*format != '%' && *format) {cout.put(*format++);} if (*format++ == '\0') {return;} cout << t, printF( format, args...);}
-template <typename T> inline void printC(T t) { for (auto &elem : t) print(elem, ""); println(); }
-#define NORMAL_IO_SPEEDUP std::ios_base::sync_with_stdio(false),std::cin.tie(NULL);
-// clang-format on
-
-// Vector2D gravity(const DynamicShape &a, const ForceField &f) {
-// 	return 6.67408e-11 * unit(f.pos - a.pos) * a.mass / lenSq(a.pos - f.pos);
-// }
+Vector2D gravity(const DynamicShape &a, const ForceField &f) {
+	return 6.67408e-11 * unit(f.pos - a.pos) * a.mass / lenSq(a.pos - f.pos);
+}
 
 void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui &gui, Simulator &sim) {
 	sim.clear();
@@ -63,11 +49,11 @@ void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui 
 				window.setTitle(title);
 			}
 			else if (type == "LINE") {
-				Vector2D a, b, p;
-				if (!(iss >> a.x >> a.y >> b.x >> b.y >> p.x >> p.y)) {
+				Vector2D a, b;
+				if (!(iss >> a.x >> a.y >> b.x >> b.y)) {
 					throw std::invalid_argument("Invalid 'LINE' input");
 				}
-				sim.addObject(new Line(a, b, p));
+				sim.addObject(new Line(a, b));
 			}
 			else if (type == "PARTICLE") {
 				double mass = 1, radius = 1;
@@ -82,6 +68,19 @@ void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui 
 				}
 				sim.addObject(new Particle(position, velocity, mass, radius));
 			}
+			else if (type == "BALL") {
+				double mass = 1, radius = 1, angle = 0, angularVelocity = 0;
+				Vector2D position, velocity;
+				if (!(iss >> mass >> radius >> position.x >> position.y)) {
+					throw std::invalid_argument("Invalid 'BALL' input");
+				}
+				if (iss >> velocity.x) {
+					if (!(iss >> velocity.y)) {
+						throw std::invalid_argument("Invalid 'BALL' input");
+					}
+				}
+				sim.addObject(new Ball(position, velocity, mass, radius, angle, angularVelocity));
+			}
 			else if (type == "GRAVITY") {
 				sim.addForceField(ForceField([](const DynamicShape &a, const ForceField &f) {
 					return Vector2D(0.0f, -9.8f) * a.mass;
@@ -89,6 +88,9 @@ void initialize(const std::string filePath, sf::RenderWindow &window, tgui::Gui 
 			}
 			else if (type == "END") {
 				return;
+			}
+			else {
+				throw std::invalid_argument("Unknown type '" + type + "'");
 			}
 		}
 		catch (const std::exception &e) {
@@ -109,14 +111,18 @@ int main() {
 	tgui::Gui gui(window);
 	initialize("G:\\work\\PhysicsEngine2D\\resources\\init.txt", window, gui, sim);
 
+	DrawUtil drawUtil(window);
+
 	bool showBox = false;
 
 	gui.loadWidgetsFromFile("G:\\work\\PhysicsEngine2D\\resources\\form.txt");
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
-	auto slider = gui.get<tgui::Slider>("slider");
-	auto coeffLabel = gui.get<tgui::Label>("coeffLabel");
+	auto restitutionSlider = gui.get<tgui::Slider>("restitutionSlider");
+	auto restitutionCoeffLabel = gui.get<tgui::Label>("restitutionCoeffLabel");
+	auto frictionSlider = gui.get<tgui::Slider>("frictionSlider");
+	auto frictionCoeffLabel = gui.get<tgui::Label>("frictionCoeffLabel");
 	auto timeLabel = gui.get<tgui::Label>("timeLabel");
 
 	checkbox->setChecked(showBox);
@@ -124,9 +130,14 @@ int main() {
 
 	resetButton->connect("pressed", [&]() { initialize("G:\\work\\PhysicsEngine2D\\resources\\init.txt", window, gui, sim); });
 
-	slider->setValue(sim.restitutionCoeff * 100);
-	slider->connect("ValueChanged", [&coeffLabel, &sim](float value) {
-		coeffLabel->setText(std::to_string(sim.restitutionCoeff = value / 100.0f));
+	restitutionSlider->setValue(sim.restitutionCoeff * 100);
+	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
+		restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff = value / 100.0f));
+	});
+
+	frictionSlider->setValue(sim.frictionCoeff * 100);
+	frictionSlider->connect("ValueChanged", [&frictionCoeffLabel, &sim](float value) {
+		frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff = value / 100.0f));
 	});
 
 	double time = 0;
@@ -143,13 +154,44 @@ int main() {
 				case sf::Event::KeyReleased: {
 					if (event.key.code == sf::Keyboard::Escape)
 						window.close();
-					if (event.key.code == sf::Keyboard::A) {
+					else if (event.key.code == sf::Keyboard::A) {
 						auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 						sim.addObject(new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
 					}
-					if (event.key.code == sf::Keyboard::Space) {
+					else if (event.key.code == sf::Keyboard::Space) {
 						pauseSimulation = !pauseSimulation;
 					}
+					else if (event.key.code == sf::Keyboard::P) {
+						for (const auto &object : sim.objects) {
+							switch (object->getClass()) {
+								case BASESHAPE:
+									break;
+								case DYNAMICSHAPE:
+									break;
+								case RIGIDSHAPE:
+									break;
+								case LINE: {
+									auto obj = static_cast<Line *>(object.get());
+									println("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
+									break;
+								}
+								case PARTICLE: {
+									auto obj = static_cast<Particle *>(object.get());
+									println("PARTICLE", obj->pos.x, obj->pos.y);
+									break;
+								}
+								case BALL: {
+									// auto obj = static_cast<Ball *>(object.get());
+									break;
+								}
+								case BOX: {
+									// auto obj = static_cast<Box *>(object.get());
+									break;
+								}
+							}
+						}
+					}
+
 					break;
 				}
 				default:
@@ -170,11 +212,9 @@ int main() {
 			const auto view = window.getView();
 			const double left = view.getCenter().x - view.getSize().x / 2, right = view.getCenter().x + view.getSize().x / 2;
 			const double top = view.getCenter().y - view.getSize().y / 2, bottom = view.getCenter().y + view.getSize().y / 2;
-			AABB(left, bottom, right, top, sf::Color::Red, window);
-			// for (int i = -50; i < 50; i += 5) {
-			// 	line({i, -100}, {i, 100}, sf::Color::Yellow, window);
-			// 	line({-100, i}, {100, i}, sf::Color::Yellow, window);
-			// }
+			drawUtil.quad({Vector2D(left, top), Vector2D(right, top),
+						   Vector2D(right, bottom), Vector2D(left, bottom)},
+						  sf::Color::Red, 5);
 		}
 
 		for (const auto &object : sim.objects) {
@@ -187,37 +227,41 @@ int main() {
 					break;
 				case LINE: {
 					auto obj = static_cast<Line *>(object.get());
-					line(obj->start, obj->end, sf::Color::Green, window);
+					drawUtil.line(obj->start, obj->end, sf::Color::Green);
+					drawUtil.line(0.5 * obj->start + 0.5 * obj->end, 0.5 * obj->start + 0.5 * obj->end + obj->normal, sf::Color::Magenta);
 					break;
 				}
 				case PARTICLE: {
 					auto obj = static_cast<Particle *>(object.get());
-					circle(obj->pos, obj->rad, sf::Color::Blue, window);
+					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
 					if (showBox) {
-						line(obj->pos, obj->pos + obj->vel, sf::Color::White, window);
+						drawUtil.line(obj->pos, obj->pos + obj->vel, sf::Color::White);
 					}
 					break;
 				}
 				case BALL: {
-					auto obj = static_cast<Ball *>(object.get());
-					circle(obj->pos, obj->rad, sf::Color::Blue, window);
-					line(obj->pos,
-						 obj->pos +
-							 obj->rad *
-								 Vector2D(std::cos(obj->angle), std::sin(obj->angle)),
-						 sf::Color::Yellow, window);
+					const auto obj = static_cast<Ball *>(object.get());
+					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
+					auto radiusVec = Vector2D(std::cos(obj->angle), std::sin(obj->angle));
+					drawUtil.line(obj->pos, obj->pos + obj->rad * radiusVec, sf::Color::Yellow);
+					drawUtil.line(obj->pos + radiusVec, obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0), sf::Color::Yellow);
+					// println(obj->angVel);
 					break;
 				}
 				case BOX: {
 					auto obj = static_cast<Box *>(object.get());
-					quad(obj->corner, sf::Color::Blue, window);
+					drawUtil.quad(obj->corner, sf::Color::Blue);
 					break;
 				}
 			}
 			if (showBox)
-				AABB(object->left, object->bottom, object->right, object->top,
-					 sf::Color::Red, window);
+				drawUtil.quad({Vector2D(object->left, object->top),
+							   Vector2D(object->right, object->top),
+							   Vector2D(object->right, object->bottom),
+							   Vector2D(object->left, object->bottom)},
+							  sf::Color::Red);
 		}
+		drawUtil.finally();
 		gui.draw();
 		window.display();
 	}

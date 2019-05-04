@@ -27,7 +27,7 @@ class ForceField {
 // Vector2D(5.8, -9.8) * a.mass; });
 ForceField gravity(
 	[](const DynamicShape &a, const ForceField &f) {
-		return -10000 * unit(a.pos) * a.mass / lenSq(a.pos - f.pos);
+		return -10000 * a.pos.unit() * a.mass / (a.pos - f.pos).lenSq();
 	});
 
 float restitutionCoeff = 0.9f;

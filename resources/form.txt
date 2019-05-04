@@ -5,6 +5,20 @@ Renderer.1 {
     textcolor = #3C3C3C;
 }
 
+Renderer.2 {
+    bordercolor = #3C3C3C;
+    bordercolorhover = black;
+    borders = (1, 1, 1, 1);
+    texturethumb = None;
+    texturethumbhover = None;
+    texturetrack = None;
+    texturetrackhover = None;
+    thumbcolor = #F5F5F5;
+    thumbcolorhover = white;
+    trackcolor = #F5F5F5;
+    trackcolorhover = white;
+}
+
 CheckBox."checkbox" {
     Position = (20, 100);
     Size = (18, 18);
@@ -67,7 +81,7 @@ Button."resetButton" {
     }
 }
 
-Slider."slider" {
+Slider."restitutionSlider" {
     InvertedDirection = false;
     Maximum = 100;
     Minimum = 0;
@@ -75,23 +89,10 @@ Slider."slider" {
     Size = (190, 16);
     Step = 1;
     Value = 0;
-
-    Renderer {
-        bordercolor = #3C3C3C;
-        bordercolorhover = black;
-        borders = (1, 1, 1, 1);
-        texturethumb = None;
-        texturethumbhover = None;
-        texturetrack = None;
-        texturetrackhover = None;
-        thumbcolor = #F5F5F5;
-        thumbcolorhover = white;
-        trackcolor = #F5F5F5;
-        trackcolorhover = white;
-    }
+    renderer = &2;
 }
 
-Label."coeffLabel" {
+Label."restitutionCoeffLabel" {
     AutoSize = true;
     Position = (220, 170);
     ScrollbarPolicy = Never;
@@ -101,7 +102,7 @@ Label."coeffLabel" {
     renderer = &1;
 }
 
-Label."coeffLabelName" {
+Label."restitutionCoeffLabelName" {
     AutoSize = true;
     Position = (13, 147);
     ScrollbarPolicy = Never;
@@ -115,8 +116,39 @@ Label."timeLabel" {
     AutoSize = true;
     Position = (20, 20);
     ScrollbarPolicy = Never;
-    Size = (52.2, 18);
+    Size = (63.2, 18);
     Text = "Time: 0 s";
+    TextSize = 13;
+    renderer = &1;
+}
+
+Label."frictionCoeffLabelName" {
+    AutoSize = true;
+    Position = (13, 217);
+    ScrollbarPolicy = Never;
+    Size = (162.2, 18);
+    Text = "Coefficient of Friction";
+    TextSize = 13;
+    renderer = &1;
+}
+
+Slider."frictionSlider" {
+    InvertedDirection = false;
+    Maximum = 100;
+    Minimum = 0;
+    Position = (20, 240);
+    Size = (190, 16);
+    Step = 1;
+    Value = 0;
+    renderer = &2;
+}
+
+Label."frictionCoeffLabel" {
+    AutoSize = true;
+    Position = (220, 240);
+    ScrollbarPolicy = Never;
+    Size = (23.2, 18);
+    Text = "0.9";
     TextSize = 13;
     renderer = &1;
 }

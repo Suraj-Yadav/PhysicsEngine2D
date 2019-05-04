@@ -8,6 +8,47 @@
 #include <SFML/OpenGL.hpp>
 #include <sstream>
 
+inline sf::Color invert(const sf::Color &c) { return sf::Color(((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255); }
+inline sf::Vector2f toVec(const Vector2D &v) { return sf::Vector2f({float(v.x), float(v.y)}); }
+
+DrawUtil::DrawUtil(sf::RenderTarget &window) : window(window),
+											   quads(sf::Quads, 0),
+											   lines(sf::Lines, 0),
+											   circle(50) {
+	if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
+		throw std::runtime_error("Font File not found");
+	text = sf::Text("", font, 30);
+}
+
+DrawUtil::~DrawUtil() {}
+
+void DrawUtil::line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, const sf::Color &c2, int width) {
+	if (width == 0) {
+		static sf::Vertex vertices[2];
+		vertices[0].position = toVec(a);
+		vertices[1].position = toVec(b);
+		vertices[0].color = c1;
+		vertices[1].color = c2;
+		lines.append(vertices[0]);
+		lines.append(vertices[1]);
+	}
+	else {
+		static sf::Vertex vertices[4];
+		const double actualWidth = -(window.getView().getSize().y / window.getSize().y) * width;
+		const auto normal = (b - a).unit().rotate(1, 0);
+		vertices[0].position = toVec(a + actualWidth * normal / 2);
+		vertices[1].position = toVec(a - actualWidth * normal / 2);
+		vertices[2].position = toVec(b - actualWidth * normal / 2);
+		vertices[3].position = toVec(b + actualWidth * normal / 2);
+		vertices[0].color = vertices[1].color = c1;
+		vertices[2].color = vertices[3].color = c2;
+		quads.append(vertices[0]);
+		quads.append(vertices[1]);
+		quads.append(vertices[2]);
+		quads.append(vertices[3]);
+	}
+}
+
 template <typename T>
 std::string to_string_stream(const T &n) {
 	std::ostringstream stm;
@@ -15,71 +56,23 @@ std::string to_string_stream(const T &n) {
 	return stm.str();
 }
 
-inline sf::Color invert(const sf::Color &c) { return sf::Color(((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255); }
-
-void AABB(double left, double bottom, double right, double top, const sf::Color &col, sf::RenderTarget &window) {
-	glLineWidth(4);
-	static sf::VertexArray lines(sf::LineStrip, 5);
-	lines[0].position.x = lines[1].position.x = left;
-	lines[2].position.x = lines[3].position.x = right;
-
-	lines[0].position.y = lines[3].position.y = bottom;
-	lines[1].position.y = lines[2].position.y = top;
-
-	lines[4].position = lines[0].position;
-
-	lines[0].color = lines[1].color = lines[2].color = lines[3].color = lines[4].color = col;
-
-	window.draw(lines);
-	glLineWidth(1);
+void DrawUtil::drawCircle(const Vector2D &cen, double rad, const sf::Color &c) {
+	circle.setRadius(rad);
+	circle.setFillColor(c);
+	circle.setOutlineColor(invert(c));
+	circle.setOutlineThickness(-std::min(0.2, 0.1 * rad));
+	circle.setPosition(cen.x, cen.y);
+	circle.setOrigin(rad, rad);
+	window.draw(circle);
 }
 
-void quad(const std::array<Vector2D, 4> &pts,
-		  const sf::Color &col,
-		  sf::RenderTarget &window) {
-	static sf::ConvexShape q(4);
-	q.setPoint(0, {(float)pts[0].x, (float)pts[0].y});
-	q.setPoint(1, {(float)pts[1].x, (float)pts[1].y});
-	q.setPoint(2, {(float)pts[2].x, (float)pts[2].y});
-	q.setPoint(3, {(float)pts[3].x, (float)pts[3].y});
-	q.setFillColor(col);
-	q.setOutlineColor(invert(col));
-	q.setOutlineThickness(-0.2);
-	window.draw(q);
-}
-
-void circle(const Vector2D &cen, float rad, const sf::Color &c, sf::RenderTarget &window) {
-	static sf::CircleShape shape(50);
-	shape.setRadius(rad);
-	shape.setFillColor(c);
-	shape.setOutlineColor(invert(c));
-	shape.setOutlineThickness(-0.2);
-	shape.setPosition(cen.x, cen.y);
-	shape.setOrigin(rad, rad);
-	window.draw(shape);
-}
-void line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, const sf::Color &c2, sf::RenderTarget &window) {
-	static sf::VertexArray lines(sf::LinesStrip, 2);
-	lines[0].position = {(float)a.x, (float)a.y};
-	lines[0].color = c1;
-	lines[1].color = c2;
-	lines[1].position = {(float)b.x, (float)b.y};
-	window.draw(lines);
-}
-void line(const Vector2D &a, const Vector2D &b, const sf::Color &c, sf::RenderTarget &window) {
-	line(a, b, c, c, window);
-}
-int text(std::string str, const Vector2D &pos, float size, const sf::Color &c, sf::RenderTarget &window) {
-	static sf::Font font;
-	if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
-		return -1;
-	static sf::Text text("", font, 30);
+void DrawUtil::drawText(std::string str, const Vector2D &pos, int size, const sf::Color &c) {
+	const double actualSize = -(window.getView().getSize().y / window.getSize().y) * size;
 	text.setString(str);
-	text.setScale(size, -size);
-	text.setColor(c);
+	text.setScale(actualSize / 30, -actualSize / 30);
+	text.setFillColor(c);
 	text.setPosition(pos.x, pos.y);
 	window.draw(text);
-	return 0;
 }
 
 /**

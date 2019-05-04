@@ -44,7 +44,8 @@ class Simulator {
 
    public:
 	float restitutionCoeff;
-	Simulator(unsigned subStep = 10, float restitutionCoeff = 1.0f);
+	float frictionCoeff;
+	Simulator(unsigned subStep = 10, float restitutionCoeff = 1.0f, float frictionCoeff = 0.5f);
 	std::vector<std::shared_ptr<BaseShape>> objects;
 	std::vector<ForceField> forceFields;
 
