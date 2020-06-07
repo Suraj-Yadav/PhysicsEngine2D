@@ -121,12 +121,12 @@ class AVL {
 			x = rebalance(x);
 		return x;
 	}
-	void inorder(Node *x, std::list<ValueType> &list) {
+	void inOrder(Node *x, std::list<ValueType> &list) {
 		if (x == nullptr) return;
-		inorder(x->left, list);
+		inOrder(x->left, list);
 		// print(x->value);
 		list.push_back(x->value);
-		inorder(x->right, list);
+		inOrder(x->right, list);
 	}
 	Node *rotateLeft(Node *h) {
 		Node *x = h->right;
@@ -197,9 +197,9 @@ class AVL {
 	inline void remove(KeyType low, KeyType high, ValueType value) {
 		root = remove(root, {low, high}, value);
 	}
-	std::list<ValueType> getInorder() {
+	std::list<ValueType> getInOrder() {
 		std::list<ValueType> list;
-		inorder(root, list);
+		inOrder(root, list);
 		return list;
 	}
 	inline std::vector<ValueType> searchAll(KeyType low, KeyType high) {

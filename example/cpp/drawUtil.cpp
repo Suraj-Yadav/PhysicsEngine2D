@@ -17,7 +17,7 @@ DrawUtil::DrawUtil(sf::RenderTarget &window,
 												  lines(sf::Lines, 0),
 												  circle(50) {
 	if (!font.loadFromFile(fontPath))
-		throw std::runtime_error("Font File not found");
+		throw std::runtime_error("Font File not found: " + fontPath);
 	text = sf::Text("", font, 30);
 }
 

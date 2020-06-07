@@ -3,26 +3,25 @@
 #include <fstream>
 #include <iostream>
 #include <set>
-
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <TGUI/TGUI.hpp>
 
-#include "Simulator.hpp"
-#include "drawUtil.hpp"
-#include "util.hpp"
+#include <PhysicsEngine2D/Simulator.hpp>
+#include <PhysicsEngine2D/util.hpp>
 
-namespace fs = boost::filesystem;
+#include "drawUtil.hpp"
 
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
 }
 
-void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gui, Simulator &sim) {
+void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, Simulator &sim) {
 	sim.clear();
 	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
+	const float scale = std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
 		iss >> type;
@@ -30,20 +29,15 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 			if (type.front() == '#') {
 			}
 			else if (type == "SIZE") {
-				const unsigned extraWidth = 250;
 				unsigned W, H;
 				double left, top, right, bottom;
 				if (!(iss >> W >> H >> left >> top >> right >> bottom)) {
 					throw std::invalid_argument("Invalid 'SIZE' input");
 				}
-				window.setSize({W + extraWidth, H});
+				window.setSize({unsigned(W  * scale), unsigned(H * scale)});
 				sf::View view(sf::FloatRect(left, top, right - left, bottom - top));
-				view.setViewport({0.0f, 0.0f, W / float(W + extraWidth), 1.0f});
+				view.setViewport({0.0f, 0.0f, 1.0f , 1.0f});
 				window.setView(view);
-				view.setCenter(extraWidth / 2, H / 2);
-				view.setSize(extraWidth, H);
-				view.setViewport({W / float(W + extraWidth), 0.0f, extraWidth / float(W + extraWidth), 1.0f});
-				gui.setView(view);
 			}
 			else if (type == "TITLE") {
 				std::string title;
@@ -107,21 +101,25 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 int main(int argc, char **argv) {
 	// NORMAL_IO_SPEEDUP;
 
-	fs::path rootPath(fs::system_complete(fs::path(argv[0])).parent_path().parent_path().parent_path());
+	std::filesystem::path rootPath(std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
 
 	Simulator sim(10, 0.9f);
 
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
-	sf::RenderWindow window(sf::VideoMode(800, 800), "2131321", sf::Style::Close, settings);
-	tgui::Gui gui(window);
-	initialize(rootPath / "resources" / "init.txt", window, gui, sim);
+	sf::RenderWindow window(sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, settings);
+	sf::RenderWindow controllerWindow(sf::VideoMode(250, 250), "Controls", sf::Style::Close, settings);
+	tgui::Gui gui(controllerWindow);
 
-	DrawUtil drawUtil(window, (rootPath / "fonts" / "Sunda_Prada.ttf").string());
+    printLn(std::filesystem::absolute(std::filesystem::path(argv[0]).parent_path()));
+	
+	initialize(rootPath/"bouncingBall.txt", window, sim);
+
+	DrawUtil drawUtil(window, "/Users/surajyadav/Documents/PhysicsEngine2D/fonts/Sunda_Prada.ttf");
 
 	bool showBox = false;
 
-	gui.loadWidgetsFromFile((rootPath / "resources" / "form.txt").string());
+	gui.loadWidgetsFromFile(rootPath/"controller.form");
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
@@ -134,7 +132,7 @@ int main(int argc, char **argv) {
 	checkbox->setChecked(showBox);
 	checkbox->connect({"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
 
-	resetButton->connect("pressed", [&]() { initialize(rootPath / "resources" / "init.txt", window, gui, sim); });
+	resetButton->connect("pressed", [&]() { initialize(rootPath/"bouncingBall.txt", window, sim); });
 
 	restitutionSlider->setValue(sim.restitutionCoeff * 100);
 	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
@@ -150,16 +148,19 @@ int main(int argc, char **argv) {
 	bool pauseSimulation = true;
 
 	sf::Clock FPSClock;
-	while (window.isOpen()) {
+	while (window.isOpen() && controllerWindow.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			switch (event.type) {
 				case sf::Event::Closed:
 					window.close();
+					controllerWindow.close();
 					break;
 				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape)
+					if (event.key.code == sf::Keyboard::Escape){
 						window.close();
+						controllerWindow.close();
+					}
 					else if (event.key.code == sf::Keyboard::A) {
 						auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 						sim.addObject(new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
@@ -178,12 +179,12 @@ int main(int argc, char **argv) {
 									break;
 								case LINE: {
 									auto obj = static_cast<Line *>(object.get());
-									println("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
+									printLn("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
 									break;
 								}
 								case PARTICLE: {
 									auto obj = static_cast<Particle *>(object.get());
-									println("PARTICLE", obj->pos.x, obj->pos.y);
+									printLn("PARTICLE", obj->pos.x, obj->pos.y);
 									break;
 								}
 								case BALL: {
@@ -201,6 +202,23 @@ int main(int argc, char **argv) {
 					break;
 				}
 				default:
+					break;
+			}
+		}
+		while (controllerWindow.pollEvent(event)) {
+			switch (event.type) {
+				case sf::Event::Closed:
+					window.close();
+					controllerWindow.close();
+					break;
+				case sf::Event::KeyReleased: {
+					if (event.key.code == sf::Keyboard::Escape){
+						window.close();
+						controllerWindow.close();
+					}
+					break;
+				}
+				default:
 					gui.handleEvent(event);
 					break;
 			}
@@ -214,6 +232,7 @@ int main(int argc, char **argv) {
 		}
 
 		window.clear();
+		controllerWindow.clear();
 		{
 			const auto view = window.getView();
 			const double left = view.getCenter().x - view.getSize().x / 2, right = view.getCenter().x + view.getSize().x / 2;
@@ -251,7 +270,6 @@ int main(int argc, char **argv) {
 					auto radiusVec = Vector2D(std::cos(obj->angle), std::sin(obj->angle));
 					drawUtil.line(obj->pos, obj->pos + obj->rad * radiusVec, sf::Color::Yellow);
 					drawUtil.line(obj->pos + radiusVec, obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0), sf::Color::Yellow);
-					// println(obj->angVel);
 					break;
 				}
 				case BOX: {
@@ -270,7 +288,9 @@ int main(int argc, char **argv) {
 		drawUtil.finally();
 		gui.draw();
 		window.display();
+		controllerWindow.display();
 	}
 	window.close();
+	controllerWindow.close();
 	return 0;
 }

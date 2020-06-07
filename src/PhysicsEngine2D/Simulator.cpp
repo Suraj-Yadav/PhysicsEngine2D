@@ -2,9 +2,10 @@
 #include <memory>
 #include <vector>
 
+#include <PhysicsEngine2D/Simulator.hpp>
+#include <PhysicsEngine2D/util.hpp>
+
 #include "IntervalTree.hpp"
-#include "Simulator.hpp"
-#include "util.hpp"
 
 Simulator::Simulator(unsigned subStep, float restitutionCoeff, float frictionCoeff)
 	: subStep(subStep), restitutionCoeff(restitutionCoeff), frictionCoeff(frictionCoeff) {
