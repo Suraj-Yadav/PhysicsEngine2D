@@ -1,7 +1,5 @@
 #include "drawUtil.hpp"
 
-// #define CATCH_CONFIG_MAIN
-
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>

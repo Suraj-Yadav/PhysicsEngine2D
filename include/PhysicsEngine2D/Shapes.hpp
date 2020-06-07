@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+
 #include "Constants.hpp"
 #include "Vector2D.hpp"
 
@@ -165,4 +166,4 @@ inline bool isTypeof(int a, int b) {
 	return a == b;
 }
 
-#endif  // SHAPE_H
+#endif	// SHAPE_H

@@ -58,4 +58,4 @@ class Simulator {
 	void clear();
 };
 
-#endif  // SIMULATION_H_INCLUDED
+#endif	// SIMULATION_H_INCLUDED

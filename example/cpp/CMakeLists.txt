@@ -26,8 +26,8 @@ macro(add_example target)
 endmacro()
 
 add_example(bouncingBall 
-            SOURCES bouncingBall.cpp bouncingBall.txt controller.form
-            RESOURCES bouncingBall.txt controller.form)
+            SOURCES bouncingBall.cpp bouncingBall.txt controller.form controller-hd.form
+            RESOURCES bouncingBall.txt controller.form controller-hd.form)
 
 # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC})
 # add_custom_command(

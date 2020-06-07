@@ -1,9 +1,8 @@
+#include <PhysicsEngine2D/Simulator.hpp>
+#include <PhysicsEngine2D/util.hpp>
 #include <functional>
 #include <memory>
 #include <vector>
-
-#include <PhysicsEngine2D/Simulator.hpp>
-#include <PhysicsEngine2D/util.hpp>
 
 #include "IntervalTree.hpp"
 

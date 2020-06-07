@@ -1,14 +1,12 @@
 #define _USE_MATH_DEFINES
+#include <PhysicsEngine2D/Simulator.hpp>
+#include <PhysicsEngine2D/util.hpp>
+#include <TGUI/TGUI.hpp>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <set>
-#include <filesystem>
-
-#include <TGUI/TGUI.hpp>
-
-#include <PhysicsEngine2D/Simulator.hpp>
-#include <PhysicsEngine2D/util.hpp>
 
 #include "drawUtil.hpp"
 
@@ -34,9 +32,9 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 				if (!(iss >> W >> H >> left >> top >> right >> bottom)) {
 					throw std::invalid_argument("Invalid 'SIZE' input");
 				}
-				window.setSize({unsigned(W  * scale), unsigned(H * scale)});
+				window.setSize({unsigned(W * scale), unsigned(H * scale)});
 				sf::View view(sf::FloatRect(left, top, right - left, bottom - top));
-				view.setViewport({0.0f, 0.0f, 1.0f , 1.0f});
+				view.setViewport({0.0f, 0.0f, 1.0f, 1.0f});
 				window.setView(view);
 			}
 			else if (type == "TITLE") {
@@ -108,18 +106,18 @@ int main(int argc, char **argv) {
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
 	sf::RenderWindow window(sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, settings);
-	sf::RenderWindow controllerWindow(sf::VideoMode(250, 250), "Controls", sf::Style::Close, settings);
+	sf::RenderWindow controllerWindow(sf::VideoMode(500, 500), "Controls", sf::Style::Close, settings);
 	tgui::Gui gui(controllerWindow);
 
-    printLn(std::filesystem::absolute(std::filesystem::path(argv[0]).parent_path()));
-	
-	initialize(rootPath/"bouncingBall.txt", window, sim);
+	printLn(std::filesystem::absolute(std::filesystem::path(argv[0]).parent_path()));
+
+	initialize(rootPath / "bouncingBall.txt", window, sim);
 
 	DrawUtil drawUtil(window, "/Users/surajyadav/Documents/PhysicsEngine2D/fonts/Sunda_Prada.ttf");
 
 	bool showBox = false;
 
-	gui.loadWidgetsFromFile(rootPath/"controller.form");
+	gui.loadWidgetsFromFile(rootPath / "controller-hd.form");
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
@@ -132,7 +130,7 @@ int main(int argc, char **argv) {
 	checkbox->setChecked(showBox);
 	checkbox->connect({"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
 
-	resetButton->connect("pressed", [&]() { initialize(rootPath/"bouncingBall.txt", window, sim); });
+	resetButton->connect("pressed", [&]() { initialize(rootPath / "bouncingBall.txt", window, sim); });
 
 	restitutionSlider->setValue(sim.restitutionCoeff * 100);
 	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
@@ -157,7 +155,7 @@ int main(int argc, char **argv) {
 					controllerWindow.close();
 					break;
 				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape){
+					if (event.key.code == sf::Keyboard::Escape) {
 						window.close();
 						controllerWindow.close();
 					}
@@ -212,7 +210,7 @@ int main(int argc, char **argv) {
 					controllerWindow.close();
 					break;
 				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape){
+					if (event.key.code == sf::Keyboard::Escape) {
 						window.close();
 						controllerWindow.close();
 					}

@@ -103,4 +103,4 @@ inline dataType distFromLine(const Vector2D &start, const Vector2D &end, const V
 		return (pt - (start + param * (end - start))).lenSq();
 }
 
-#endif  // VECTOR2D_H
+#endif	// VECTOR2D_H
