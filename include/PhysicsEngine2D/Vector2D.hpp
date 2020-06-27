@@ -4,6 +4,7 @@
 #define dataType double
 
 #include <cmath>
+#include <ostream>
 #include <string>
 
 template <class T>
@@ -80,6 +81,9 @@ class Vector2D {
 		if (almost_equal(mag, 0.0)) return std::make_pair(0.0, Vector2D(0.0, 0.0));
 		return std::make_pair(mag, this->operator/(mag));
 	}
+	friend std::ostream &operator<<(std::ostream &out, Vector2D const &v) {
+		return out << "(" << v.x << ", " << v.y << ")";
+	}
 };
 
 ////////////////////////////////////////////////////////////
@@ -103,4 +107,4 @@ inline dataType distFromLine(const Vector2D &start, const Vector2D &end, const V
 		return (pt - (start + param * (end - start))).lenSq();
 }
 
-#endif  // VECTOR2D_H
+#endif	// VECTOR2D_H

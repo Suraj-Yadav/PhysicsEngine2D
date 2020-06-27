@@ -23,7 +23,7 @@ CheckBox."checkbox" {
     Position = (20, 100);
     Size = (18, 18);
     Text = "Show Bounding Boxes";
-    TextSize = 13;
+    TextSize = 15;
 
     Renderer {
         backgroundcolor = #F5F5F5;
@@ -98,7 +98,7 @@ Label."restitutionCoeffLabel" {
     ScrollbarPolicy = Never;
     Size = (23.2, 18);
     Text = "0.9";
-    TextSize = 13;
+    TextSize = 15;
     renderer = &1;
 }
 
@@ -108,7 +108,7 @@ Label."restitutionCoeffLabelName" {
     ScrollbarPolicy = Never;
     Size = (162.2, 18);
     Text = "Coefficient of Restitution";
-    TextSize = 13;
+    TextSize = 15;
     renderer = &1;
 }
 
@@ -118,7 +118,7 @@ Label."timeLabel" {
     ScrollbarPolicy = Never;
     Size = (63.2, 18);
     Text = "Time: 0 s";
-    TextSize = 13;
+    TextSize = 15;
     renderer = &1;
 }
 
@@ -128,7 +128,7 @@ Label."frictionCoeffLabelName" {
     ScrollbarPolicy = Never;
     Size = (162.2, 18);
     Text = "Coefficient of Friction";
-    TextSize = 13;
+    TextSize = 15;
     renderer = &1;
 }
 
@@ -149,6 +149,6 @@ Label."frictionCoeffLabel" {
     ScrollbarPolicy = Never;
     Size = (23.2, 18);
     Text = "0.9";
-    TextSize = 13;
+    TextSize = 15;
     renderer = &1;
 }

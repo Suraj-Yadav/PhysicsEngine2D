@@ -1,14 +1,14 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-// #include <SFML/Graphics/Color.hpp>
-// #include <SFML/Graphics/RenderTarget.hpp>
-// #include <SFML/Graphics/VertexArray.hpp>
-#include <TGUI/TGUI.hpp>
+#include <PhysicsEngine2D/Vector2D.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 #include <array>
 #include <string>
-
-#include "Vector2D.hpp"
 
 class DrawUtil {
 	sf::RenderTarget &window;
@@ -43,4 +43,4 @@ class DrawUtil {
 
 void drawGrid(sf::RenderTarget &window, bool change);
 
-#endif  // UTIL_H
+#endif	// UTIL_H

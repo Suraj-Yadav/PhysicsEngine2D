@@ -1,28 +1,25 @@
 #define _USE_MATH_DEFINES
+#include <PhysicsEngine2D/Simulator.hpp>
+#include <PhysicsEngine2D/util.hpp>
+#include <TGUI/TGUI.hpp>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <set>
 
-#include <boost/filesystem.hpp>
-
-#include <TGUI/TGUI.hpp>
-
-#include "Simulator.hpp"
 #include "drawUtil.hpp"
-#include "util.hpp"
-
-namespace fs = boost::filesystem;
 
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
 }
 
-void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gui, Simulator &sim) {
+void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, Simulator &sim) {
 	sim.clear();
 	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
+	const float scale = std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
 		iss >> type;
@@ -30,20 +27,15 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 			if (type.front() == '#') {
 			}
 			else if (type == "SIZE") {
-				const unsigned extraWidth = 250;
 				unsigned W, H;
 				double left, top, right, bottom;
 				if (!(iss >> W >> H >> left >> top >> right >> bottom)) {
 					throw std::invalid_argument("Invalid 'SIZE' input");
 				}
-				window.setSize({W + extraWidth, H});
+				window.setSize({unsigned(W * scale), unsigned(H * scale)});
 				sf::View view(sf::FloatRect(left, top, right - left, bottom - top));
-				view.setViewport({0.0f, 0.0f, W / float(W + extraWidth), 1.0f});
+				view.setViewport({0.0f, 0.0f, 1.0f, 1.0f});
 				window.setView(view);
-				view.setCenter(extraWidth / 2, H / 2);
-				view.setSize(extraWidth, H);
-				view.setViewport({W / float(W + extraWidth), 0.0f, extraWidth / float(W + extraWidth), 1.0f});
-				gui.setView(view);
 			}
 			else if (type == "TITLE") {
 				std::string title;
@@ -70,6 +62,7 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 						throw std::invalid_argument("Invalid 'PARTICLE' input");
 					}
 				}
+
 				sim.addObject(new Particle(position, velocity, mass, radius));
 			}
 			else if (type == "BALL") {
@@ -83,11 +76,18 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 						throw std::invalid_argument("Invalid 'BALL' input");
 					}
 				}
+				iss >> angle;
+				iss >> angularVelocity;
+
 				sim.addObject(new Ball(position, velocity, mass, radius, angle, angularVelocity));
 			}
 			else if (type == "GRAVITY") {
-				sim.addForceField(ForceField([](const DynamicShape &a, const ForceField &f) {
-					return Vector2D(0.0f, -9.8f) * a.mass;
+				dataType x, y;
+				if (!(iss >> x >> y)) {
+					throw std::invalid_argument("Invalid 'GRAVITY' input");
+				}
+				sim.addForceField(ForceField([x, y](const DynamicShape &a, const ForceField &f) {
+					return Vector2D(x, y) * a.mass;
 				}));
 			}
 			else if (type == "END") {
@@ -107,21 +107,32 @@ void initialize(const fs::path filePath, sf::RenderWindow &window, tgui::Gui &gu
 int main(int argc, char **argv) {
 	// NORMAL_IO_SPEEDUP;
 
-	fs::path rootPath(fs::system_complete(fs::path(argv[0])).parent_path().parent_path().parent_path());
+	std::vector<std::string> args;
+	for (int i = 0; i < argc; i++) {
+		args.push_back(argv[i]);
+	}
 
-	Simulator sim(10, 0.9f);
+	const auto initFilePath = std::filesystem::absolute(std::filesystem::path(args[1]));
+
+	std::filesystem::path rootPath(std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
+
+	Simulator sim(10, 1.0f, 0.0f);
 
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
-	sf::RenderWindow window(sf::VideoMode(800, 800), "2131321", sf::Style::Close, settings);
-	tgui::Gui gui(window);
-	initialize(rootPath / "resources" / "init.txt", window, gui, sim);
+	sf::RenderWindow controllerWindow(sf::VideoMode(500, 500), "Controls", sf::Style::Close, settings);
+	controllerWindow.setPosition({200, 200});
+	sf::RenderWindow window(sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, settings);
+	window.setPosition({700, 200});
+	tgui::Gui gui(controllerWindow);
 
-	DrawUtil drawUtil(window, (rootPath / "fonts" / "Sunda_Prada.ttf").string());
+	initialize(initFilePath, window, sim);
+
+	DrawUtil drawUtil(window, "/Users/surajyadav/Documents/PhysicsEngine2D/fonts/Sunda_Prada.ttf");
 
 	bool showBox = false;
 
-	gui.loadWidgetsFromFile((rootPath / "resources" / "form.txt").string());
+	gui.loadWidgetsFromFile(rootPath / "controller-hd.form");
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
@@ -134,14 +145,14 @@ int main(int argc, char **argv) {
 	checkbox->setChecked(showBox);
 	checkbox->connect({"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
 
-	resetButton->connect("pressed", [&]() { initialize(rootPath / "resources" / "init.txt", window, gui, sim); });
-
 	restitutionSlider->setValue(sim.restitutionCoeff * 100);
+	restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff));
 	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
 		restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff = value / 100.0f));
 	});
 
 	frictionSlider->setValue(sim.frictionCoeff * 100);
+	frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff));
 	frictionSlider->connect("ValueChanged", [&frictionCoeffLabel, &sim](float value) {
 		frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff = value / 100.0f));
 	});
@@ -149,23 +160,34 @@ int main(int argc, char **argv) {
 	double time = 0;
 	bool pauseSimulation = true;
 
+	resetButton->connect("pressed", [&]() {
+		initialize(initFilePath, window, sim);
+		time = 0; });
+
 	sf::Clock FPSClock;
-	while (window.isOpen()) {
+	while (window.isOpen() && controllerWindow.isOpen()) {
 		sf::Event event;
 		while (window.pollEvent(event)) {
 			switch (event.type) {
 				case sf::Event::Closed:
 					window.close();
+					controllerWindow.close();
 					break;
 				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape)
+					if (event.key.code == sf::Keyboard::Escape) {
 						window.close();
+						controllerWindow.close();
+					}
 					else if (event.key.code == sf::Keyboard::A) {
 						auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 						sim.addObject(new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
 					}
 					else if (event.key.code == sf::Keyboard::Space) {
 						pauseSimulation = !pauseSimulation;
+					}
+					else if (event.key.code == sf::Keyboard::R) {
+						initialize(initFilePath, window, sim);
+						time = 0;
 					}
 					else if (event.key.code == sf::Keyboard::P) {
 						for (const auto &object : sim.objects) {
@@ -178,12 +200,12 @@ int main(int argc, char **argv) {
 									break;
 								case LINE: {
 									auto obj = static_cast<Line *>(object.get());
-									println("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
+									printLn("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
 									break;
 								}
 								case PARTICLE: {
 									auto obj = static_cast<Particle *>(object.get());
-									println("PARTICLE", obj->pos.x, obj->pos.y);
+									printLn("PARTICLE", obj->pos.x, obj->pos.y);
 									break;
 								}
 								case BALL: {
@@ -201,6 +223,23 @@ int main(int argc, char **argv) {
 					break;
 				}
 				default:
+					break;
+			}
+		}
+		while (controllerWindow.pollEvent(event)) {
+			switch (event.type) {
+				case sf::Event::Closed:
+					window.close();
+					controllerWindow.close();
+					break;
+				case sf::Event::KeyReleased: {
+					if (event.key.code == sf::Keyboard::Escape) {
+						window.close();
+						controllerWindow.close();
+					}
+					break;
+				}
+				default:
 					gui.handleEvent(event);
 					break;
 			}
@@ -211,9 +250,13 @@ int main(int argc, char **argv) {
 			time += timeLapse.asSeconds();
 			sim.simulate(timeLapse.asSeconds());
 			timeLabel->setText("Time: " + std::to_string(time) + " s");
+			// if (time >= 20) {
+			// 	break;
+			// }
 		}
 
 		window.clear();
+		controllerWindow.clear();
 		{
 			const auto view = window.getView();
 			const double left = view.getCenter().x - view.getSize().x / 2, right = view.getCenter().x + view.getSize().x / 2;
@@ -222,7 +265,6 @@ int main(int argc, char **argv) {
 						   Vector2D(right, bottom), Vector2D(left, bottom)},
 						  sf::Color::Red, 5);
 		}
-
 		for (const auto &object : sim.objects) {
 			switch (object->getClass()) {
 				case BASESHAPE:
@@ -251,7 +293,13 @@ int main(int argc, char **argv) {
 					auto radiusVec = Vector2D(std::cos(obj->angle), std::sin(obj->angle));
 					drawUtil.line(obj->pos, obj->pos + obj->rad * radiusVec, sf::Color::Yellow);
 					drawUtil.line(obj->pos + radiusVec, obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0), sf::Color::Yellow);
-					// println(obj->angVel);
+					if (!pauseSimulation) {
+						auto KE = 0.5 * obj->mass * obj->vel.lenSq(),
+							 PE = 9.8 * obj->mass * obj->pos.y;
+						// printLn(time, ',', KE, ',', PE, ',', KE + PE);
+						// 	std::cout << time << ',' << obj->pos.x << ',' << obj->pos.y << ',' << obj->vel.x << ',' << obj->vel.y << '\n';
+					}
+
 					break;
 				}
 				case BOX: {
@@ -270,7 +318,9 @@ int main(int argc, char **argv) {
 		drawUtil.finally();
 		gui.draw();
 		window.display();
+		controllerWindow.display();
 	}
 	window.close();
+	controllerWindow.close();
 	return 0;
 }

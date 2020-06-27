@@ -1,10 +1,18 @@
 #!/bin/bash
 
 set -e
-# rm -rf build;
-mkdir -p build; cd build
-mkdir -p Release Debug Profile
+CMAKE_GENERATOR="MinGW Makefiles"
 
-cd Debug; cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" ../..; cd ..
-cd Release; cmake -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" ../..; cd ..
-cd Profile; cmake -DCMAKE_BUILD_TYPE=Profile -G "MinGW Makefiles" ../..; cd ..
+case $OSTYPE in
+    darwin*)
+        CMAKE_GENERATOR="Unix Makefiles"
+    ;;
+    *)
+    ;;
+esac
+
+
+rm -rf build;
+cmake -S . -B build/Debug -DCMAKE_BUILD_TYPE=Debug -G "$CMAKE_GENERATOR"
+cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release -G "$CMAKE_GENERATOR"
+cmake -S . -B build/Profile -DCMAKE_BUILD_TYPE=Profile -G "$CMAKE_GENERATOR"

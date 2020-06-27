@@ -1,7 +1,5 @@
 #include "drawUtil.hpp"
 
-// #define CATCH_CONFIG_MAIN
-
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>
@@ -17,7 +15,7 @@ DrawUtil::DrawUtil(sf::RenderTarget &window,
 												  lines(sf::Lines, 0),
 												  circle(50) {
 	if (!font.loadFromFile(fontPath))
-		throw std::runtime_error("Font File not found");
+		throw std::runtime_error("Font File not found: " + fontPath);
 	text = sf::Text("", font, 30);
 }
 

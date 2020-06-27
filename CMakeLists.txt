@@ -1,38 +1,30 @@
 # CMAKE Version
 cmake_minimum_required(VERSION 3.7)
 
-project(PhysicsEngine2D  LANGUAGES CXX)
+set(PROJECT_NAME PhysicsEngine2D)
+
+project(${PROJECT_NAME} LANGUAGES CXX)
 
 add_custom_target(createConstantsHpp
-					COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/inheritance.py
-					DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/Shapes.hpp
+					COMMAND python3.7 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/inheritance.py ${PROJECT_NAME}
+					DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}/Shapes.hpp
 					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-set(SRC 
-	${CMAKE_CURRENT_SOURCE_DIR}/src/Collision.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/src/drawUtil.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/src/Simulator.cpp)
+set(SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}/Simulator.cpp)
 
-add_executable(PhysicsEngine2D ${SRC})
-target_include_directories(PhysicsEngine2D PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-add_dependencies(PhysicsEngine2D createConstantsHpp)
-# include_directories("./include")
+add_library(${PROJECT_NAME} ${SRC})
 
-set_property(TARGET PhysicsEngine2D PROPERTY CXX_STANDARD 17)
-set_property(TARGET PhysicsEngine2D PROPERTY CXX_STANDARD_REQUIRED ON)
-target_compile_options(PhysicsEngine2D PRIVATE -Wpedantic -Wextra -Wall -Wunused)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_dependencies(${PROJECT_NAME} createConstantsHpp)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wpedantic -Wextra -Wall -Wunused)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Profile")
-	target_compile_options(PhysicsEngine2D PRIVATE -pg)
-	target_link_options(PhysicsEngine2D PRIVATE -pg)
+	target_compile_options(${PROJECT_NAME} PRIVATE -pg)
+	target_link_options(${PROJECT_NAME} PRIVATE -pg)
 endif()
 
-
-find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
-find_package(TGUI REQUIRED)
-find_package(Boost 1.66.0 COMPONENTS filesystem)
-
-target_include_directories(PhysicsEngine2D PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(PhysicsEngine2D PRIVATE sfml-graphics tgui opengl32 ${Boost_LIBRARIES})
+add_subdirectory(example)
