@@ -27,6 +27,10 @@ class BaseShape {
 		if (this->bottom > anotherShape.top) return false;
 		return true;
 	}
+	friend std::ostream &operator<<(std::ostream &out, BaseShape const &b) {
+		return out << "BaseShape"
+				   << "[]";
+	}
 	double top, left, right, bottom;
 };
 
@@ -45,6 +49,11 @@ class DynamicShape : public BaseShape {
 		updateAABB(delTime);
 	}
 	virtual Type getClass() { return DYNAMICSHAPE; }
+	friend std::ostream &operator<<(std::ostream &out, DynamicShape const &b) {
+		return out << "DynamicShape"
+				   << "["
+				   << "pos:" << b.pos << ", vel:" << b.vel << ", " << static_cast<const BaseShape &>(b) << "]";
+	}
 
 	Vector2D pos;
 	Vector2D vel;
@@ -88,6 +97,11 @@ class RigidShape : public DynamicShape {
 		angle += angVel * delTime;
 		updateAABB(delTime);
 	}
+	friend std::ostream &operator<<(std::ostream &out, RigidShape const &b) {
+		return out << "RigidShape"
+				   << "["
+				   << "angle:" << b.angle << ", angVel:" << b.angVel << ", " << static_cast<const DynamicShape &>(b) << "]";
+	}
 	double inertia, invInertia, angle, angVel;
 };
 
@@ -108,6 +122,10 @@ class Ball final : public RigidShape {
 	}
 	~Ball() {}
 	Type getClass() { return BALL; }
+	friend std::ostream &operator<<(std::ostream &out, Ball const &b) {
+		return out << "Ball"
+				   << "[" << static_cast<const RigidShape &>(b) << "]";
+	}
 	double rad;
 };
 
@@ -153,6 +171,11 @@ class Line final : public BaseShape {
 	}
 	~Line() {}
 	Type getClass() { return LINE; }
+	friend std::ostream &operator<<(std::ostream &out, Line const &b) {
+		return out << "Line"
+				   << "["
+				   << "start:" << b.start << ", end:" << b.end << ", normal" << b.normal << ", " << static_cast<const BaseShape &>(b) << "]";
+	}
 
 	Vector2D start;
 	Vector2D end;

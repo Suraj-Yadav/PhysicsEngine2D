@@ -10,7 +10,7 @@ macro(add_example target)
     set(multiValueArgs SOURCES RESOURCES)
     cmake_parse_arguments(EXAMPLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    add_executable(${target} ${EXAMPLE_SOURCES} ${COMMON_SRC})
+    add_executable(${target} ${EXAMPLE_SOURCES} ${COMMON_SRC} ${EXAMPLE_RESOURCES})
     
     target_include_directories(${target} PRIVATE ${COMMON_HEADER})
     set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
@@ -18,16 +18,16 @@ macro(add_example target)
     target_compile_options(${target} PRIVATE -Wpedantic -Wextra -Wall -Wunused)
     target_link_libraries(${target} PRIVATE sfml-graphics tgui)
     target_link_libraries(${target} LINK_PUBLIC ${PROJECT_NAME})
-    
+
     # Copy resource files to build directory
     foreach(RESOURCE_FILE ${EXAMPLE_RESOURCES})
         file(COPY ${RESOURCE_FILE} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endforeach()
 endmacro()
 
-add_example(bouncingBall 
-            SOURCES bouncingBall.cpp bouncingBall.txt controller.form controller-hd.form
-            RESOURCES bouncingBall.txt controller.form controller-hd.form)
+add_example(viewer 
+            SOURCES viewer.cpp
+            RESOURCES controller.form controller-hd.form)
 
 # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC})
 # add_custom_command(

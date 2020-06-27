@@ -88,10 +88,8 @@ bool Simulator::manageCollision(Ball &b, Line &l, float delTime) {
 		if (dist < 0.0f)
 			b.pos -= dist * l.normal;
 		if (b.vel.dot(l.normal) < 0.0) {
-			const auto normalComp = b.vel.projOnUnit(l.normal), normalImpulse = -(1 + restitutionCoeff) * normalComp;
-			// const auto linearTangentialVelocity = b.vel - normalComp,
-			// radial
-			const auto [tangentialCompMag, tangentialCompDir] = (b.vel - normalComp - b.angVel * b.rad * l.normal.rotate(1, 0)).getMagnitudeAndDirection();
+			const auto normalComp = (b.vel * b.mass).projOnUnit(l.normal), normalImpulse = -(1 + restitutionCoeff) * normalComp;
+			const auto [tangentialCompMag, tangentialCompDir] = (b.vel * b.mass - normalComp - b.angVel * b.inertia * b.rad * l.normal.rotate(1, 0)).getMagnitudeAndDirection();
 			const auto frictionImpulse = -frictionCoeff * std::min(normalComp.len(), tangentialCompMag) * tangentialCompDir;
 			b.applyImpulse(normalImpulse + frictionImpulse, b.pos - l.normal * b.rad);
 		}
