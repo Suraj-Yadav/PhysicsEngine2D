@@ -6,7 +6,6 @@ A simple implementation of a Physics Engine with collisions and force fields
 * [LLVM](https://clang.llvm.org/) (Only needed for Windows and Linux, I guess :-)
 * [Python3](http://python.org/)
 	* [clang](https://pypi.org/project/clang/) Python clang binding
-* [Boost](https://www.boost.org/) Requires `filesystem`.
 * [SFML](https://www.sfml-dev.org/) Minimum 2.5.1
 * [TGUI](https://tgui.eu/) Minimum 0.8
 
