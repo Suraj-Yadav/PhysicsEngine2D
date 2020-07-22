@@ -4,6 +4,12 @@ set(COMMON_SRC drawUtil.cpp)
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 find_package(TGUI REQUIRED)
 
+add_library(profiler SHARED IMPORTED) # or STATIC instead of SHARED
+set_target_properties(profiler PROPERTIES
+  IMPORTED_LOCATION "/usr/local/Cellar/gperftools/2.7/lib/libprofiler.a"
+)
+
+
 macro(add_example target)
     set(options OPTIONAL FAST)
     set(oneValueArgs DESTINATION RENAME)
@@ -15,8 +21,9 @@ macro(add_example target)
     target_include_directories(${target} PRIVATE ${COMMON_HEADER})
     set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
     set_property(TARGET ${target} PROPERTY CXX_STANDARD_REQUIRED ON)
-    target_compile_options(${target} PRIVATE -Wpedantic -Wextra -Wall -Wunused)
-    target_link_libraries(${target} PRIVATE sfml-graphics tgui)
+    target_compile_options(${target} PRIVATE "-Werror=multichar" -Wextra -Wall -Wunused -g -Ofast)
+    link_directories(/usr/local/Cellar/gperftools/2.7/lib)
+    target_link_libraries(${target} PRIVATE sfml-graphics tgui profiler)
     target_link_libraries(${target} LINK_PUBLIC ${PROJECT_NAME})
 
     # Copy resource files to build directory

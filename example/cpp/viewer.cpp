@@ -1,4 +1,6 @@
 #define _USE_MATH_DEFINES
+#include <gperftools/profiler.h>
+
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
 #include <TGUI/TGUI.hpp>
@@ -6,9 +8,22 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <set>
 
 #include "drawUtil.hpp"
+
+void print_exception(const std::exception &e, int level = 0) {
+	std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';
+	try {
+		std::rethrow_if_nested(e);
+	}
+	catch (const std::exception &e) {
+		print_exception(e, level + 1);
+	}
+	catch (...) {
+	}
+}
 
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
@@ -19,6 +34,10 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
+
+	std::random_device rd;	 //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd());	 //Standard mersenne_twister_engine seeded with rd()
+
 	const float scale = std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
@@ -90,6 +109,25 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 					return Vector2D(x, y) * a.mass;
 				}));
 			}
+			else if (type == "REPEAT") {
+				int repeatCount = 0;
+				std::string itemType = "";
+				if (!(iss >> repeatCount >> itemType)) {
+				}
+				if (itemType == "PARTICLE") {
+					double massMin, massMax, radMin, radMax, xMin, xMax, yMin, yMax;
+					if (!(iss >> massMin >> massMax >> radMin >> radMax >> xMin >> xMax >> yMin >> yMax)) {
+						throw std::invalid_argument("Invalid 'REPEAT' input");
+					}
+					std::uniform_real_distribution<> mass(massMin, massMax);
+					std::uniform_real_distribution<> rad(radMin, radMax);
+					std::uniform_real_distribution<> x(xMin, xMax);
+					std::uniform_real_distribution<> y(yMin, yMax);
+					for (int i = 0; i < std::max(0, repeatCount); i++) {
+						sim.addObject(new Particle({x(gen), y(gen)}, {0, 0}, mass(gen), rad(gen)));
+					}
+				}
+			}
 			else if (type == "END") {
 				return;
 			}
@@ -98,7 +136,7 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 			}
 		}
 		catch (const std::exception &e) {
-			printF("%:%: %", filePath, lineNumber, e.what());
+			print_exception(e);
 			throw;
 		}
 	}
@@ -116,7 +154,7 @@ int main(int argc, char **argv) {
 
 	std::filesystem::path rootPath(std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
 
-	Simulator sim(10, 1.0f, 0.0f);
+	Simulator sim(10, 0.9f, 0.9f);
 
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
@@ -164,6 +202,7 @@ int main(int argc, char **argv) {
 		initialize(initFilePath, window, sim);
 		time = 0; });
 
+	ProfilerStart("output.pprof");
 	sf::Clock FPSClock;
 	while (window.isOpen() && controllerWindow.isOpen()) {
 		sf::Event event;
@@ -319,7 +358,11 @@ int main(int argc, char **argv) {
 		gui.draw();
 		window.display();
 		controllerWindow.display();
+		if (time >= 10.0) {
+			break;
+		}
 	}
+	ProfilerStop();
 	window.close();
 	controllerWindow.close();
 	return 0;

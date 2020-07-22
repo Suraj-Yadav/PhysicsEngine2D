@@ -8,8 +8,10 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Debug/PhysicsEngine2D",
-            "args": [],
+            "program": "${workspaceFolder}/build/Debug/example/cpp/viewer",
+            "args": [
+                "example/cpp/bouncingBall.txt"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

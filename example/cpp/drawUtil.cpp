@@ -58,8 +58,8 @@ std::string to_string_stream(const T &n) {
 void DrawUtil::drawCircle(const Vector2D &cen, double rad, const sf::Color &c) {
 	circle.setRadius(rad);
 	circle.setFillColor(c);
-	circle.setOutlineColor(invert(c));
-	circle.setOutlineThickness(-std::min(0.2, 0.1 * rad));
+	// circle.setOutlineColor(invert(c));
+	// circle.setOutlineThickness(-std::min(0.2, 0.1 * rad));
 	circle.setPosition(cen.x, cen.y);
 	circle.setOrigin(rad, rad);
 	window.draw(circle);

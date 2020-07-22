@@ -2,11 +2,10 @@
 #define SIMULATOR_H
 
 #include <functional>
-#include <memory>
-#include <random>
 #include <unordered_set>
 #include <vector>
 
+#include "IntervalTree.hpp"
 #include "Shapes.hpp"
 
 class ForceField {
@@ -34,6 +33,12 @@ struct pair_hasher {
 	}
 };
 
+struct Event {
+	double xCoord;
+	bool isStart;
+	int index;
+};
+
 class Simulator {
 	std::vector<std::pair<int, int>> getCollisions();
 	bool manageCollision(Particle &first, Particle &second, float delTime);
@@ -41,6 +46,8 @@ class Simulator {
 	bool manageCollision(Box &b, Line &l, float delTime);
 	bool manageCollision(Particle &b, Line &l, float delTime);
 	unsigned subStep;
+	AVL<double, int> st;
+	std::vector<Event> xEvents;
 
    public:
 	float restitutionCoeff;

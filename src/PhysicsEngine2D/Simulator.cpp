@@ -1,40 +1,37 @@
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <vector>
-
-#include "IntervalTree.hpp"
 
 Simulator::Simulator(unsigned subStep, float restitutionCoeff, float frictionCoeff)
 	: subStep(subStep), restitutionCoeff(restitutionCoeff), frictionCoeff(frictionCoeff) {
 }
 
 void Simulator::addObject(BaseShape *object) {
-	objects.push_back(std::unique_ptr<BaseShape>(object));
+	objects.emplace_back(std::unique_ptr<BaseShape>(object));
 }
 
 void Simulator::addForceField(const ForceField forceField) {
-	forceFields.push_back(forceField);
+	forceFields.emplace_back(forceField);
 }
 
 std::string str(const Vector2D &a) {
 	return "(" + std::to_string(a.x) + "," + std::to_string(a.y) + ")";
 }
 
-struct Event {
-	double xCoord;
-	bool isStart;
-	int index;
-};
 inline bool operator<(const Event &a, const Event &b) {
-	return std::tie(a.xCoord, a.isStart) < std::tie(b.xCoord, b.isStart);
+	return a.xCoord < b.xCoord || a.xCoord == b.xCoord && a.isStart < b.isStart;
+	// return std::tie(a.xCoord, a.isStart) < std::tie(b.xCoord, b.isStart);
 }
 
 std::vector<std::pair<int, int>> Simulator::getCollisions() {
 	std::vector<std::pair<int, int>> collisions;
-	AVL<double, int> st;
-	std::vector<Event> xEvents(2 * objects.size());
+
+	st.reserve(objects.size());
+	xEvents.resize(2 * objects.size());
+
 	for (size_t i = 0, j = 0; i < objects.size(); ++i, j += 2) {
 		xEvents[j].xCoord = objects[i]->left;
 		xEvents[j].isStart = true;
@@ -49,13 +46,14 @@ std::vector<std::pair<int, int>> Simulator::getCollisions() {
 			auto list = st.searchAll(objects[event.index]->bottom, objects[event.index]->top);
 			for (auto &j : list) {
 				if (objects[event.index]->intersects(*objects[j]))
-					collisions.push_back({event.index, j});
+					collisions.emplace_back(event.index, j);
 			}
 			st.insert(objects[event.index]->bottom, objects[event.index]->top, event.index);
 		}
 		else {
 			st.remove(objects[event.index]->bottom, objects[event.index]->top, event.index);
 		}
+		// st.printTree();
 	}
 	return collisions;
 }
