@@ -1,27 +1,39 @@
 #include "drawUtil.hpp"
 
+#include <PhysicsEngine2D/util.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/OpenGL.hpp>
 #include <sstream>
 
-inline sf::Color invert(const sf::Color &c) { return sf::Color(((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255); }
-inline sf::Vector2f toVec(const Vector2D &v) { return sf::Vector2f({float(v.x), float(v.y)}); }
+#include "fontManager.hpp"
 
-DrawUtil::DrawUtil(sf::RenderTarget &window,
-				   const std::string &fontPath) : window(window),
-												  quads(sf::Quads, 0),
-												  lines(sf::Lines, 0),
-												  circle(50) {
-	if (!font.loadFromFile(fontPath))
-		throw std::runtime_error("Font File not found: " + fontPath);
+inline sf::Color invert(const sf::Color &c) {
+	return sf::Color(
+		((255 - c.r) << 24) + ((255 - c.g) << 16) + ((255 - c.b) << 8) + 255);
+}
+inline sf::Vector2f toVec(const Vector2D &v) {
+	return sf::Vector2f({float(v.x), float(v.y)});
+}
+
+DrawUtil::DrawUtil(sf::RenderTarget &window, const std::string &fontName)
+	: window(window), quads(sf::Quads, 0), lines(sf::Lines, 0), circle(50) {
+	if (!font.loadFromFile(fontManager::findFont(fontName).path.string())) {
+		throw std::runtime_error("Font File not found: " + fontName);
+	}
+
 	text = sf::Text("", font, 30);
 }
 
 DrawUtil::~DrawUtil() {}
 
-void DrawUtil::line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, const sf::Color &c2, int width) {
+void DrawUtil::line(
+	const Vector2D &a,
+	const Vector2D &b,
+	const sf::Color &c1,
+	const sf::Color &c2,
+	int width) {
 	if (width == 0) {
 		static sf::Vertex vertices[2];
 		vertices[0].position = toVec(a);
@@ -33,7 +45,8 @@ void DrawUtil::line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, c
 	}
 	else {
 		static sf::Vertex vertices[4];
-		const double actualWidth = -(window.getView().getSize().y / window.getSize().y) * width;
+		const double actualWidth =
+			-(window.getView().getSize().y / window.getSize().y) * width;
 		const auto normal = (b - a).unit().rotate(1, 0);
 		vertices[0].position = toVec(a + actualWidth * normal / 2);
 		vertices[1].position = toVec(a - actualWidth * normal / 2);
@@ -48,8 +61,7 @@ void DrawUtil::line(const Vector2D &a, const Vector2D &b, const sf::Color &c1, c
 	}
 }
 
-template <typename T>
-std::string to_string_stream(const T &n) {
+template <typename T> std::string to_string_stream(const T &n) {
 	std::ostringstream stm;
 	stm << n;
 	return stm.str();
@@ -65,8 +77,10 @@ void DrawUtil::drawCircle(const Vector2D &cen, double rad, const sf::Color &c) {
 	window.draw(circle);
 }
 
-void DrawUtil::drawText(std::string str, const Vector2D &pos, int size, const sf::Color &c) {
-	const double actualSize = -(window.getView().getSize().y / window.getSize().y) * size;
+void DrawUtil::drawText(
+	std::string str, const Vector2D &pos, int size, const sf::Color &c) {
+	const double actualSize =
+		-(window.getView().getSize().y / window.getSize().y) * size;
 	text.setString(str);
 	text.setScale(actualSize / 30, -actualSize / 30);
 	text.setFillColor(c);
@@ -80,22 +94,23 @@ void DrawUtil::drawText(std::string str, const Vector2D &pos, int size, const sf
  */
 float getScaleDivision(float viewSize, float windowSize) {
 	// Values to decide a "Good" size of unit cell
-	const float vals[] = {5.0, 2.5, 2.0, 1.0, 0.5, 0.25, 0.2, 0.1},
-				maxPix = 140.0f,  // Range of actual pixel size(for unit cell) allowed
-		minPix = 120.0f;		  //
+	const float
+		vals[] = {5.0, 2.5, 2.0, 1.0, 0.5, 0.25, 0.2, 0.1},
+		maxPix = 140.0f,  // Range of actual pixel size(for unit cell) allowed
+		minPix = 120.0f;  //
 
 	bool isPositive = viewSize >= 0;
 
-	if (!isPositive)
-		viewSize = -viewSize;
+	if (!isPositive) viewSize = -viewSize;
 
-	float val = vals[0],
-		  sep = pow(10, floor(log10(viewSize))),
+	float val = vals[0], sep = pow(10, floor(log10(viewSize))),
 		  pix = windowSize * sep / viewSize,
-		  dist = std::min(fabs(vals[0] * pix - maxPix), fabs(vals[0] * pix - minPix));
+		  dist = std::min(
+			  fabs(vals[0] * pix - maxPix), fabs(vals[0] * pix - minPix));
 
 	for (size_t i = 1; i < 8; i++) {
-		float tdist = std::min(fabs(vals[i] * pix - maxPix), fabs(vals[i] * pix - minPix));
+		float tdist = std::min(
+			fabs(vals[i] * pix - maxPix), fabs(vals[i] * pix - minPix));
 		if (dist > tdist) {
 			val = vals[i];
 			dist = tdist;
@@ -137,13 +152,13 @@ std::vector<std::pair<int, float>> getYPoints(const sf::RenderTarget &window) {
 	}
 	return markings;
 }
-void addGridMarks(std::vector<sf::Vertex> &Line,
-				  std::vector<std::pair<int, float>> &xMarkings,
-				  std::vector<std::pair<int, float>> &yMarkings,
-				  int length = 10,
-				  int offset = 0) {
-	float start = offset,
-		  end = start + length;
+void addGridMarks(
+	std::vector<sf::Vertex> &Line,
+	std::vector<std::pair<int, float>> &xMarkings,
+	std::vector<std::pair<int, float>> &yMarkings,
+	int length = 10,
+	int offset = 0) {
+	float start = offset, end = start + length;
 	for (auto p : xMarkings) {
 		Line.emplace_back(sf::Vector2f(p.first, start), sf::Color::Red);
 		Line.emplace_back(sf::Vector2f(p.first, end), sf::Color::Red);
@@ -156,35 +171,37 @@ void addGridMarks(std::vector<sf::Vertex> &Line,
 	}
 }
 
-void gridLable(sf::RenderTarget &window,
-			   std::vector<std::pair<int, float>> &xMarkings,
-			   std::vector<std::pair<int, float>> &yMarkings,
-			   int offset = 10) {
+void gridLable(
+	sf::RenderTarget &window,
+	std::vector<std::pair<int, float>> &xMarkings,
+	std::vector<std::pair<int, float>> &yMarkings,
+	int offset = 10) {
 	static sf::Font font;
 	if (font.getInfo().family.size() == 0)
-		if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
-			return;
+		if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) return;
 	static sf::Text text("", font, 15);
 	for (auto p : xMarkings) {
 		text.setString(to_string_stream(p.second));
 		text.setPosition(p.first, offset);
-		sf::Vector2f point(text.getGlobalBounds().left + text.getGlobalBounds().width, text.getGlobalBounds().top + text.getGlobalBounds().height);
+		sf::Vector2f point(
+			text.getGlobalBounds().left + text.getGlobalBounds().width,
+			text.getGlobalBounds().top + text.getGlobalBounds().height);
 		if (point.x > window.getSize().x)
 			text.move(window.getSize().x - point.x, 0);
 		if (point.y > window.getSize().y)
 			text.move(0, window.getSize().y - point.y);
-		if (text.getPosition().y < 0)
-			text.move(0, -text.getPosition().y);
+		if (text.getPosition().y < 0) text.move(0, -text.getPosition().y);
 		window.draw(text);
 	}
 	for (auto p : yMarkings) {
 		text.setString(to_string_stream(p.second));
 		text.setPosition(offset, p.first);
-		sf::Vector2f point(text.getGlobalBounds().left + text.getGlobalBounds().width, text.getGlobalBounds().top + text.getGlobalBounds().height);
+		sf::Vector2f point(
+			text.getGlobalBounds().left + text.getGlobalBounds().width,
+			text.getGlobalBounds().top + text.getGlobalBounds().height);
 		if (point.x > window.getSize().x)
 			text.move(window.getSize().x - point.x, 0);
-		if (text.getPosition().x < 0)
-			text.move(-text.getPosition().x, 0);
+		if (text.getPosition().x < 0) text.move(-text.getPosition().x, 0);
 		if (point.y > window.getSize().y)
 			text.move(0, window.getSize().y - point.y);
 		window.draw(text);

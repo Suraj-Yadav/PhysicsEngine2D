@@ -1,11 +1,4 @@
 Renderer.1 {
-    backgroundcolor = transparent;
-    bordercolor = #3C3C3C;
-    borders = (0, 0, 0, 0);
-    textcolor = #3C3C3C;
-}
-
-Renderer.2 {
     bordercolor = #3C3C3C;
     bordercolorhover = black;
     borders = (1, 1, 1, 1);
@@ -19,11 +12,12 @@ Renderer.2 {
     trackcolorhover = white;
 }
 
-CheckBox."checkbox" {
-    Position = (20, 100);
-    Size = (18, 18);
+CheckBox.checkbox {
+    Checked = true;
+    Position = (20, 130);
+    Size = (36, 36);
     Text = "Show Bounding Boxes";
-    TextSize = 15;
+    TextSize = 30;
 
     Renderer {
         backgroundcolor = #F5F5F5;
@@ -37,7 +31,7 @@ CheckBox."checkbox" {
         checkcolor = #3C3C3C;
         checkcolordisabled = #7D7D7D;
         checkcolorhover = black;
-        textcolor = #3C3C3C;
+        textcolor = white;
         textcolordisabled = #7D7D7D;
         textcolorhover = black;
         textdistanceratio = 0.2;
@@ -52,11 +46,11 @@ CheckBox."checkbox" {
     }
 }
 
-Button."resetButton" {
-    Position = (20, 50);
-    Size = (55, 22);
-    Text = "Reset";
-    TextSize = 13;
+Button.resetButton {
+    Position = (20, 60);
+    Size = (110, 44);
+    Text = Reset;
+    TextSize = 30;
 
     Renderer {
         backgroundcolor = #F5F5F5;
@@ -69,10 +63,11 @@ Button."resetButton" {
         bordercolorfocused = #1E1EB4;
         bordercolorhover = black;
         borders = (1, 1, 1, 1);
-        textcolor = #3C3C3C;
+        textcolor = black;
         textcolordisabled = #7D7D7D;
         textcolordown = black;
         textcolorhover = black;
+        textstyle = Bold;
         texture = None;
         texturedisabled = None;
         texturedown = None;
@@ -81,74 +76,122 @@ Button."resetButton" {
     }
 }
 
-Slider."restitutionSlider" {
+Slider.restitutionSlider {
+    ChangeValueOnScroll = true;
     InvertedDirection = false;
     Maximum = 100;
     Minimum = 0;
-    Position = (20, 170);
-    Size = (190, 16);
+    Position = (20, 250);
+    Size = (380, 32);
     Step = 1;
     Value = 0;
-    renderer = &2;
+    renderer = &1;
 }
 
-Label."restitutionCoeffLabel" {
+Label.restitutionCoeffLabel {
     AutoSize = true;
-    Position = (220, 170);
+    Position = (410, 250);
     ScrollbarPolicy = Never;
-    Size = (23.2, 18);
+    Size = (54.2, 40);
     Text = "0.9";
-    TextSize = 15;
-    renderer = &1;
+    TextSize = 30;
+
+    Renderer {
+        backgroundcolor = transparent;
+        bordercolor = #3C3C3C;
+        borders = (0, 0, 0, 0);
+        textcolor = white;
+        texturebackground = None;
+
+        scrollbar {
+            arrowbackgroundcolor = #F5F5F5;
+            arrowbackgroundcolorhover = white;
+            arrowcolor = #3C3C3C;
+            arrowcolorhover = black;
+            texturearrowdown = None;
+            texturearrowdownhover = None;
+            texturearrowup = None;
+            texturearrowuphover = None;
+            texturethumb = None;
+            texturethumbhover = None;
+            texturetrack = None;
+            texturetrackhover = None;
+            thumbcolor = #DCDCDC;
+            thumbcolorhover = #E6E6E6;
+            trackcolor = #F5F5F5;
+        }
+    }
 }
 
-Label."restitutionCoeffLabelName" {
+Label.restitutionCoeffLabelName {
     AutoSize = true;
-    Position = (13, 147);
+    Position = (20, 207);
     ScrollbarPolicy = Never;
-    Size = (162.2, 18);
+    Size = (416.2, 40);
     Text = "Coefficient of Restitution";
-    TextSize = 15;
-    renderer = &1;
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textstyle = Bold;
+        texturebackground = None;
+    }
 }
 
-Label."timeLabel" {
+Label.timeLabel {
     AutoSize = true;
     Position = (20, 20);
     ScrollbarPolicy = Never;
-    Size = (63.2, 18);
+    Size = (156.2, 40);
     Text = "Time: 0 s";
-    TextSize = 15;
-    renderer = &1;
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textstyle = Bold;
+        texturebackground = None;
+    }
 }
 
-Label."frictionCoeffLabelName" {
+Label.frictionCoeffLabelName {
     AutoSize = true;
-    Position = (13, 217);
+    Position = (20, 337);
     ScrollbarPolicy = Never;
-    Size = (162.2, 18);
+    Size = (359.2, 40);
     Text = "Coefficient of Friction";
-    TextSize = 15;
-    renderer = &1;
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textstyle = Bold;
+        texturebackground = None;
+    }
 }
 
-Slider."frictionSlider" {
+Slider.frictionSlider {
+    ChangeValueOnScroll = true;
     InvertedDirection = false;
     Maximum = 100;
     Minimum = 0;
-    Position = (20, 240);
-    Size = (190, 16);
+    Position = (20, 380);
+    Size = (380, 32);
     Step = 1;
     Value = 0;
-    renderer = &2;
+    renderer = &1;
 }
 
-Label."frictionCoeffLabel" {
+Label.frictionCoeffLabel {
     AutoSize = true;
-    Position = (220, 240);
+    Position = (410, 380);
     ScrollbarPolicy = Never;
-    Size = (23.2, 18);
+    Size = (57.2, 40);
     Text = "0.9";
-    TextSize = 15;
-    renderer = &1;
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textoutlinecolor = None;
+        textstyle = Bold;
+        texturebackground = None;
+    }
 }

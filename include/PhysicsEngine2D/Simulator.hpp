@@ -2,6 +2,7 @@
 #define SIMULATOR_H
 
 #include <functional>
+#include <memory>
 #include <unordered_set>
 #include <vector>
 

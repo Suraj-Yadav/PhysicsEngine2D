@@ -6,7 +6,7 @@ set(PROJECT_NAME PhysicsEngine2D)
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 add_custom_target(createConstantsHpp
-					COMMAND python3.7 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/inheritance.py ${PROJECT_NAME}
+					COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/inheritance.py ${PROJECT_NAME}
 					DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}/Shapes.hpp
 					WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -23,8 +23,10 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 target_compile_options(${PROJECT_NAME} PRIVATE "-Werror=multichar" -Wextra -Wall -Wunused -g -Ofast)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Profile")
-	target_compile_options(${PROJECT_NAME} PRIVATE -pg)
-	target_link_options(${PROJECT_NAME} PRIVATE -pg)
+	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		target_compile_options(${PROJECT_NAME} PRIVATE -pg)
+		target_link_options(${PROJECT_NAME} PRIVATE -pg)
+	endif()
 endif()
 
 add_subdirectory(example)

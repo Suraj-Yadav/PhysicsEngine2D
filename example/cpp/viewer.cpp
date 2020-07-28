@@ -1,5 +1,8 @@
 #define _USE_MATH_DEFINES
+
+#ifdef __APPLE__
 #include <gperftools/profiler.h>
+#endif
 
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
@@ -29,16 +32,24 @@ Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
 }
 
-void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, Simulator &sim) {
+void initialize(
+	const std::filesystem::path filePath, sf::RenderWindow &window,
+	sf::RenderWindow &controllerWindow, Simulator &sim) {
 	sim.clear();
 	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
 
-	std::random_device rd;	 //Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd());	 //Standard mersenne_twister_engine seeded with rd()
+	// Will be used to obtain a seed for the random number engine
+	std::random_device rd;
+
+	// Standard mersenne_twister_engine seeded with rd()
+	std::mt19937 gen(rd());
 
 	const float scale = std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
+	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
+	controllerWindow.setPosition({200, 200});
+	window.setPosition({200 + 300 * scale, 200});
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
 		iss >> type;
@@ -116,7 +127,8 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 				}
 				if (itemType == "PARTICLE") {
 					double massMin, massMax, radMin, radMax, xMin, xMax, yMin, yMax;
-					if (!(iss >> massMin >> massMax >> radMin >> radMax >> xMin >> xMax >> yMin >> yMax)) {
+					if (!(iss >> massMin >> massMax >> radMin >> radMax >> xMin >> xMax >> yMin >>
+						  yMax)) {
 						throw std::invalid_argument("Invalid 'REPEAT' input");
 					}
 					std::uniform_real_distribution<> mass(massMin, massMax);
@@ -143,34 +155,33 @@ void initialize(const std::filesystem::path filePath, sf::RenderWindow &window, 
 }
 
 int main(int argc, char **argv) {
-	// NORMAL_IO_SPEEDUP;
+	NORMAL_IO_SPEEDUP;
 
 	std::vector<std::string> args;
 	for (int i = 0; i < argc; i++) {
-		args.push_back(argv[i]);
+		args.emplace_back(argv[i]);
 	}
 
 	const auto initFilePath = std::filesystem::absolute(std::filesystem::path(args[1]));
 
-	std::filesystem::path rootPath(std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
+	std::filesystem::path rootPath(
+		std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
 
 	Simulator sim(10, 0.9f, 0.9f);
 
-	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
-	sf::RenderWindow controllerWindow(sf::VideoMode(500, 500), "Controls", sf::Style::Close, settings);
-	controllerWindow.setPosition({200, 200});
-	sf::RenderWindow window(sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, settings);
-	window.setPosition({700, 200});
+	sf::RenderWindow controllerWindow(
+		sf::VideoMode(300, 300), "Controls", sf::Style::Close, sf::ContextSettings(0, 0, 8));
+	sf::RenderWindow window(
+		sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, sf::ContextSettings(0, 0, 8));
 	tgui::Gui gui(controllerWindow);
 
-	initialize(initFilePath, window, sim);
+	initialize(initFilePath, window, controllerWindow, sim);
 
-	DrawUtil drawUtil(window, "/Users/surajyadav/Documents/PhysicsEngine2D/fonts/Sunda_Prada.ttf");
+	DrawUtil drawUtil(window, "2Dumb");
 
 	bool showBox = false;
 
-	gui.loadWidgetsFromFile(rootPath / "controller-hd.form");
+	gui.loadWidgetsFromFile((rootPath / "controller.form").string());
 
 	auto resetButton = gui.get<tgui::Button>("resetButton");
 	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
@@ -199,10 +210,14 @@ int main(int argc, char **argv) {
 	bool pauseSimulation = true;
 
 	resetButton->connect("pressed", [&]() {
-		initialize(initFilePath, window, sim);
-		time = 0; });
+		initialize(initFilePath, window, controllerWindow, sim);
+		time = 0;
+	});
 
+#ifdef __APPLE__
 	ProfilerStart("output.pprof");
+#endif
+
 	sf::Clock FPSClock;
 	while (window.isOpen() && controllerWindow.isOpen()) {
 		sf::Event event;
@@ -225,7 +240,7 @@ int main(int argc, char **argv) {
 						pauseSimulation = !pauseSimulation;
 					}
 					else if (event.key.code == sf::Keyboard::R) {
-						initialize(initFilePath, window, sim);
+						initialize(initFilePath, window, controllerWindow, sim);
 						time = 0;
 					}
 					else if (event.key.code == sf::Keyboard::P) {
@@ -239,7 +254,9 @@ int main(int argc, char **argv) {
 									break;
 								case LINE: {
 									auto obj = static_cast<Line *>(object.get());
-									printLn("LINE", obj->start.x, obj->start.y, obj->start.x, obj->end.y);
+									printLn(
+										"LINE", obj->start.x, obj->start.y, obj->start.x,
+										obj->end.y);
 									break;
 								}
 								case PARTICLE: {
@@ -248,11 +265,13 @@ int main(int argc, char **argv) {
 									break;
 								}
 								case BALL: {
-									// auto obj = static_cast<Ball *>(object.get());
+									// auto obj = static_cast<Ball
+									// *>(object.get());
 									break;
 								}
 								case BOX: {
-									// auto obj = static_cast<Box *>(object.get());
+									// auto obj = static_cast<Box
+									// *>(object.get());
 									break;
 								}
 							}
@@ -298,11 +317,14 @@ int main(int argc, char **argv) {
 		controllerWindow.clear();
 		{
 			const auto view = window.getView();
-			const double left = view.getCenter().x - view.getSize().x / 2, right = view.getCenter().x + view.getSize().x / 2;
-			const double top = view.getCenter().y - view.getSize().y / 2, bottom = view.getCenter().y + view.getSize().y / 2;
-			drawUtil.quad({Vector2D(left, top), Vector2D(right, top),
-						   Vector2D(right, bottom), Vector2D(left, bottom)},
-						  sf::Color::Red, 5);
+			const double left = view.getCenter().x - view.getSize().x / 2,
+						 right = view.getCenter().x + view.getSize().x / 2;
+			const double top = view.getCenter().y - view.getSize().y / 2,
+						 bottom = view.getCenter().y + view.getSize().y / 2;
+			drawUtil.quad(
+				{Vector2D(left, top), Vector2D(right, top), Vector2D(right, bottom),
+				 Vector2D(left, bottom)},
+				sf::Color::Red, 5);
 		}
 		for (const auto &object : sim.objects) {
 			switch (object->getClass()) {
@@ -315,7 +337,9 @@ int main(int argc, char **argv) {
 				case LINE: {
 					auto obj = static_cast<Line *>(object.get());
 					drawUtil.line(obj->start, obj->end, sf::Color::Green);
-					drawUtil.line(0.5 * obj->start + 0.5 * obj->end, 0.5 * obj->start + 0.5 * obj->end + obj->normal, sf::Color::Magenta);
+					drawUtil.line(
+						0.5 * obj->start + 0.5 * obj->end,
+						0.5 * obj->start + 0.5 * obj->end + obj->normal, sf::Color::Magenta);
 					break;
 				}
 				case PARTICLE: {
@@ -331,12 +355,17 @@ int main(int argc, char **argv) {
 					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
 					auto radiusVec = Vector2D(std::cos(obj->angle), std::sin(obj->angle));
 					drawUtil.line(obj->pos, obj->pos + obj->rad * radiusVec, sf::Color::Yellow);
-					drawUtil.line(obj->pos + radiusVec, obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0), sf::Color::Yellow);
+					drawUtil.line(
+						obj->pos + radiusVec,
+						obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0),
+						sf::Color::Yellow);
 					if (!pauseSimulation) {
 						auto KE = 0.5 * obj->mass * obj->vel.lenSq(),
 							 PE = 9.8 * obj->mass * obj->pos.y;
 						// printLn(time, ',', KE, ',', PE, ',', KE + PE);
-						// 	std::cout << time << ',' << obj->pos.x << ',' << obj->pos.y << ',' << obj->vel.x << ',' << obj->vel.y << '\n';
+						// 	std::cout << time << ',' << obj->pos.x << ',' <<
+						// obj->pos.y << ',' << obj->vel.x << ',' << obj->vel.y
+						// << '\n';
 					}
 
 					break;
@@ -348,21 +377,24 @@ int main(int argc, char **argv) {
 				}
 			}
 			if (showBox)
-				drawUtil.quad({Vector2D(object->left, object->top),
-							   Vector2D(object->right, object->top),
-							   Vector2D(object->right, object->bottom),
-							   Vector2D(object->left, object->bottom)},
-							  sf::Color::Red);
+				drawUtil.quad(
+					{Vector2D(object->left, object->top), Vector2D(object->right, object->top),
+					 Vector2D(object->right, object->bottom),
+					 Vector2D(object->left, object->bottom)},
+					sf::Color::Red);
 		}
 		drawUtil.finally();
 		gui.draw();
 		window.display();
 		controllerWindow.display();
-		if (time >= 10.0) {
-			break;
-		}
+		// if (time >= 10.0) {
+		// 	break;
+		// }
 	}
+#ifdef __APPLE__
 	ProfilerStop();
+#endif
+
 	window.close();
 	controllerWindow.close();
 	return 0;

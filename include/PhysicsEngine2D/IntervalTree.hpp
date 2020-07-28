@@ -1,3 +1,4 @@
+#include <cassert>
 #include <limits>
 #include <list>
 #include <tuple>
