@@ -20,4 +20,4 @@ template <typename T> inline void printC(T t) { for (auto &elem : t) print(elem,
 #define debug(x) #x, x
 // clang-format on
 
-#endif	// UTIL_HPP
+#endif  // UTIL_HPP

@@ -3,7 +3,7 @@ AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
 AlwaysBreakTemplateDeclarations: false
 BreakBeforeBraces: Custom
-ColumnLimit: 100
+ColumnLimit: 80
 AlignAfterOpenBracket: AlwaysBreak
 DerivePointerAlignment: true
 IndentCaseLabels: true

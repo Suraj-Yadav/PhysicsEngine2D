@@ -29,11 +29,8 @@ DrawUtil::DrawUtil(sf::RenderTarget &window, const std::string &fontName)
 DrawUtil::~DrawUtil() {}
 
 void DrawUtil::line(
-	const Vector2D &a,
-	const Vector2D &b,
-	const sf::Color &c1,
-	const sf::Color &c2,
-	int width) {
+	const Vector2D &a, const Vector2D &b, const sf::Color &c1,
+	const sf::Color &c2, int width) {
 	if (width == 0) {
 		static sf::Vertex vertices[2];
 		vertices[0].position = toVec(a);
@@ -155,8 +152,7 @@ std::vector<std::pair<int, float>> getYPoints(const sf::RenderTarget &window) {
 void addGridMarks(
 	std::vector<sf::Vertex> &Line,
 	std::vector<std::pair<int, float>> &xMarkings,
-	std::vector<std::pair<int, float>> &yMarkings,
-	int length = 10,
+	std::vector<std::pair<int, float>> &yMarkings, int length = 10,
 	int offset = 0) {
 	float start = offset, end = start + length;
 	for (auto p : xMarkings) {
@@ -172,10 +168,8 @@ void addGridMarks(
 }
 
 void gridLable(
-	sf::RenderTarget &window,
-	std::vector<std::pair<int, float>> &xMarkings,
-	std::vector<std::pair<int, float>> &yMarkings,
-	int offset = 10) {
+	sf::RenderTarget &window, std::vector<std::pair<int, float>> &xMarkings,
+	std::vector<std::pair<int, float>> &yMarkings, int offset = 10) {
 	static sf::Font font;
 	if (font.getInfo().family.size() == 0)
 		if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) return;

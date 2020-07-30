@@ -50,13 +50,8 @@ namespace fontManager {
 			  monospace(false) {}
 
 		FontDescriptor(
-			const char *path,
-			const char *postscriptName,
-			const char *family,
-			const char *style,
-			FontWeight weight,
-			FontWidth width,
-			bool italic,
+			const char *path, const char *postscriptName, const char *family,
+			const char *style, FontWeight weight, FontWidth width, bool italic,
 			bool monospace)
 			: path(path),
 			  postscriptName(postscriptName),
@@ -76,4 +71,4 @@ namespace fontManager {
 	}
 }  // namespace fontManager
 
-#endif	// FONT_MANAGER_H
+#endif  // FONT_MANAGER_H

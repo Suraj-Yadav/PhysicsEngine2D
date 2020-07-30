@@ -8,14 +8,12 @@
 
 #define comparePair(a1, a2, b1, b2) ((a1 < b1) || (!(b1 < a1) && a2 < b2))
 
-template <class Type>
-struct Interval {
+template <class Type> struct Interval {
 	Type low, high;
 	inline Interval()
 		: low(std::numeric_limits<Type>::max()),
 		  high(std::numeric_limits<Type>::lowest()) {}
-	inline Interval(Type start, Type end)
-		: low(start), high(end) {}
+	inline Interval(Type start, Type end) : low(start), high(end) {}
 
 	friend std::ostream &operator<<(std::ostream &out, Interval const &b) {
 		return out << "Interval (" << b.low << "," << b.high << ")";
@@ -27,8 +25,7 @@ bool operator<(const Interval<T> &x, const Interval<T> &y) {
 	return comparePair(x.low, x.high, y.low, y.high);
 }
 
-template <class KeyType, class ValueType>
-class AVL {
+template <class KeyType, class ValueType> class AVL {
 	static const int NULL_NODE = -1;
 	struct Node {
 		Interval<KeyType> range;
@@ -74,9 +71,7 @@ class AVL {
 		return newSlot;
 	}
 
-	int newNode(int index) {
-		return index;
-	}
+	int newNode(int index) { return index; }
 
 	void deleteNode(int index) {
 		// printLn("deleteNode", debug(index));
@@ -92,31 +87,32 @@ class AVL {
 			nodes[x].balance -= 1 + nodes[nodes[x].right].height;
 		nodes[x].height = -1;
 		if (nodes[x].left != NULL_NODE)
-			nodes[x].height = std::max(nodes[nodes[x].left].height, nodes[x].height);
+			nodes[x].height =
+				std::max(nodes[nodes[x].left].height, nodes[x].height);
 		if (nodes[x].right != NULL_NODE)
-			nodes[x].height = std::max(nodes[nodes[x].right].height, nodes[x].height);
+			nodes[x].height =
+				std::max(nodes[nodes[x].right].height, nodes[x].height);
 		++nodes[x].height;
 		nodes[x].maxEnd = nodes[x].range.high;
 		if (nodes[x].left != NULL_NODE)
-			nodes[x].maxEnd = std::max(nodes[nodes[x].left].maxEnd, nodes[x].maxEnd);
+			nodes[x].maxEnd =
+				std::max(nodes[nodes[x].left].maxEnd, nodes[x].maxEnd);
 		if (nodes[x].right != NULL_NODE)
-			nodes[x].maxEnd = std::max(nodes[nodes[x].right].maxEnd, nodes[x].maxEnd);
+			nodes[x].maxEnd =
+				std::max(nodes[nodes[x].right].maxEnd, nodes[x].maxEnd);
 	}
 	int insert(int x, const Interval<KeyType> &range, const ValueType &value) {
-		if (x == NULL_NODE)
-			return newNode(range, value);
+		if (x == NULL_NODE) return newNode(range, value);
 		if (comparePair(range, value, nodes[x].range, nodes[x].value))
 			nodes[x].left = insert(nodes[x].left, range, value);
 		else
 			nodes[x].right = insert(nodes[x].right, range, value);
 		updateBalance(x);
-		if (nodes[x].balance < -1 || nodes[x].balance > 1)
-			x = rebalance(x);
+		if (nodes[x].balance < -1 || nodes[x].balance > 1) x = rebalance(x);
 		return x;
 	}
 	int search(int x, KeyType start) {
-		if (x == NULL_NODE)
-			return NULL_NODE;
+		if (x == NULL_NODE) return NULL_NODE;
 		if (nodes[x].range.low > start)
 			return search(nodes[x].left, start);
 		else if (nodes[x].range.low == start)
@@ -133,8 +129,7 @@ class AVL {
 		else {
 			nodes[x].left = removeMin(nodes[x].left);
 			updateBalance(x);
-			if (nodes[x].balance < -1 || nodes[x].balance > 1)
-				x = rebalance(x);
+			if (nodes[x].balance < -1 || nodes[x].balance > 1) x = rebalance(x);
 			returnValue = x;
 		}
 		return returnValue;
@@ -172,8 +167,7 @@ class AVL {
 			}
 		}
 		updateBalance(x);
-		if (nodes[x].balance < -1 || nodes[x].balance > 1)
-			x = rebalance(x);
+		if (nodes[x].balance < -1 || nodes[x].balance > 1) x = rebalance(x);
 		return x;
 	}
 	void inOrder(int x, std::list<ValueType> &list) {
@@ -213,18 +207,16 @@ class AVL {
 		return node;
 	}
 	bool intersects(int x, KeyType low, KeyType high) {
-		if (high < nodes[x].range.low)
-			return false;
-		if (nodes[x].maxEnd < low)
-			return false;
+		if (high < nodes[x].range.low) return false;
+		if (nodes[x].maxEnd < low) return false;
 		return true;
 	}
-	bool searchAll(int x, KeyType low, KeyType high, std::vector<ValueType> &list) {
+	bool searchAll(
+		int x, KeyType low, KeyType high, std::vector<ValueType> &list) {
 		bool found1 = false;
 		bool found2 = false;
 		bool found3 = false;
-		if (x == NULL_NODE)
-			return false;
+		if (x == NULL_NODE) return false;
 		if (intersects(x, low, high)) {
 			// printLn(debug(nodes[x].value), debug(list.size()));
 			list.emplace_back(nodes[x].value);
@@ -232,15 +224,14 @@ class AVL {
 		}
 		if (nodes[x].left != NULL_NODE && nodes[nodes[x].left].maxEnd >= low)
 			found2 = searchAll(nodes[x].left, low, high, list);
-		if (found2 || nodes[x].left == NULL_NODE || nodes[nodes[x].left].maxEnd < low)
+		if (found2 || nodes[x].left == NULL_NODE ||
+			nodes[nodes[x].left].maxEnd < low)
 			found3 = searchAll(nodes[x].right, low, high, list);
 		return found1 || found2 || found3;
 	}
 
    public:
-	AVL() {
-		root = NULL_NODE;
-	}
+	AVL() { root = NULL_NODE; }
 	~AVL() {
 		assert(nodes.size() == freeMemorySlots.size());
 		// if (root) {
@@ -251,9 +242,7 @@ class AVL {
 		// printLn("insert", debug(low), debug(high), debug(value));
 		root = insert(root, {low, high}, value);
 	}
-	inline void removeMin() {
-		root = removeMin(root);
-	}
+	inline void removeMin() { root = removeMin(root); }
 	inline void remove(KeyType low, KeyType high, ValueType value) {
 		// printLn("remove", debug(low), debug(high), debug(value));
 
@@ -290,7 +279,5 @@ class AVL {
 		}
 	}
 
-	void reserve(size_t size) {
-		nodes.reserve(size);
-	}
+	void reserve(size_t size) { nodes.reserve(size); }
 };

@@ -14,14 +14,13 @@ class ForceField {
 
    public:
 	Vector2D pos;
-	ForceField(const std::function<Vector2D(const DynamicShape &,
-											const ForceField &)> &f,
-			   const Vector2D &p = Vector2D())
+	ForceField(
+		const std::function<Vector2D(const DynamicShape &, const ForceField &)>
+			&f,
+		const Vector2D &p = Vector2D())
 		: func(f), pos(p) {}
 	Vector2D getForce(const DynamicShape &obj) { return func(obj, *this); }
-	void setPos(const Vector2D &p) {
-		pos = p;
-	}
+	void setPos(const Vector2D &p) { pos = p; }
 };
 
 struct pair_hasher {
@@ -53,7 +52,9 @@ class Simulator {
    public:
 	float restitutionCoeff;
 	float frictionCoeff;
-	Simulator(unsigned subStep = 10, float restitutionCoeff = 1.0f, float frictionCoeff = 0.5f);
+	Simulator(
+		unsigned subStep = 10, float restitutionCoeff = 1.0f,
+		float frictionCoeff = 0.5f);
 	std::vector<std::shared_ptr<BaseShape>> objects;
 	std::vector<ForceField> forceFields;
 
@@ -66,4 +67,4 @@ class Simulator {
 	void clear();
 };
 
-#endif	// SIMULATION_H_INCLUDED
+#endif  // SIMULATION_H_INCLUDED

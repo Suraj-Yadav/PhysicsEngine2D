@@ -29,7 +29,8 @@ void print_exception(const std::exception &e, int level = 0) {
 }
 
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
-	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass / (a.pos - f.pos).lenSq();
+	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass /
+		   (a.pos - f.pos).lenSq();
 }
 
 void initialize(
@@ -46,7 +47,8 @@ void initialize(
 	// Standard mersenne_twister_engine seeded with rd()
 	std::mt19937 gen(rd());
 
-	const float scale = std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
+	const float scale =
+		std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
 	controllerWindow.setPosition({200, 200});
 	window.setPosition({200 + 300 * scale, 200});
@@ -63,7 +65,8 @@ void initialize(
 					throw std::invalid_argument("Invalid 'SIZE' input");
 				}
 				window.setSize({unsigned(W * scale), unsigned(H * scale)});
-				sf::View view(sf::FloatRect(left, top, right - left, bottom - top));
+				sf::View view(
+					sf::FloatRect(left, top, right - left, bottom - top));
 				view.setViewport({0.0f, 0.0f, 1.0f, 1.0f});
 				window.setView(view);
 			}
@@ -109,16 +112,18 @@ void initialize(
 				iss >> angle;
 				iss >> angularVelocity;
 
-				sim.addObject(new Ball(position, velocity, mass, radius, angle, angularVelocity));
+				sim.addObject(new Ball(
+					position, velocity, mass, radius, angle, angularVelocity));
 			}
 			else if (type == "GRAVITY") {
 				dataType x, y;
 				if (!(iss >> x >> y)) {
 					throw std::invalid_argument("Invalid 'GRAVITY' input");
 				}
-				sim.addForceField(ForceField([x, y](const DynamicShape &a, const ForceField &f) {
-					return Vector2D(x, y) * a.mass;
-				}));
+				sim.addForceField(ForceField(
+					[x, y](const DynamicShape &a, const ForceField &f) {
+						return Vector2D(x, y) * a.mass;
+					}));
 			}
 			else if (type == "REPEAT") {
 				int repeatCount = 0;
@@ -126,9 +131,10 @@ void initialize(
 				if (!(iss >> repeatCount >> itemType)) {
 				}
 				if (itemType == "PARTICLE") {
-					double massMin, massMax, radMin, radMax, xMin, xMax, yMin, yMax;
-					if (!(iss >> massMin >> massMax >> radMin >> radMax >> xMin >> xMax >> yMin >>
-						  yMax)) {
+					double massMin, massMax, radMin, radMax, xMin, xMax, yMin,
+						yMax;
+					if (!(iss >> massMin >> massMax >> radMin >> radMax >>
+						  xMin >> xMax >> yMin >> yMax)) {
 						throw std::invalid_argument("Invalid 'REPEAT' input");
 					}
 					std::uniform_real_distribution<> mass(massMin, massMax);
@@ -136,7 +142,8 @@ void initialize(
 					std::uniform_real_distribution<> x(xMin, xMax);
 					std::uniform_real_distribution<> y(yMin, yMax);
 					for (int i = 0; i < std::max(0, repeatCount); i++) {
-						sim.addObject(new Particle({x(gen), y(gen)}, {0, 0}, mass(gen), rad(gen)));
+						sim.addObject(new Particle(
+							{x(gen), y(gen)}, {0, 0}, mass(gen), rad(gen)));
 					}
 				}
 			}
@@ -162,17 +169,21 @@ int main(int argc, char **argv) {
 		args.emplace_back(argv[i]);
 	}
 
-	const auto initFilePath = std::filesystem::absolute(std::filesystem::path(args[1]));
+	const auto initFilePath =
+		std::filesystem::absolute(std::filesystem::path(args[1]));
 
 	std::filesystem::path rootPath(
-		std::filesystem::absolute(std::filesystem::path(argv[0])).parent_path());
+		std::filesystem::absolute(std::filesystem::path(argv[0]))
+			.parent_path());
 
 	Simulator sim(10, 0.9f, 0.9f);
 
 	sf::RenderWindow controllerWindow(
-		sf::VideoMode(300, 300), "Controls", sf::Style::Close, sf::ContextSettings(0, 0, 8));
+		sf::VideoMode(300, 300), "Controls", sf::Style::Close,
+		sf::ContextSettings(0, 0, 8));
 	sf::RenderWindow window(
-		sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close, sf::ContextSettings(0, 0, 8));
+		sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close,
+		sf::ContextSettings(0, 0, 8));
 	tgui::Gui gui(controllerWindow);
 
 	initialize(initFilePath, window, controllerWindow, sim);
@@ -192,19 +203,24 @@ int main(int argc, char **argv) {
 	auto timeLabel = gui.get<tgui::Label>("timeLabel");
 
 	checkbox->setChecked(showBox);
-	checkbox->connect({"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
+	checkbox->connect(
+		{"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
 
 	restitutionSlider->setValue(sim.restitutionCoeff * 100);
 	restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff));
-	restitutionSlider->connect("ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
-		restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff = value / 100.0f));
-	});
+	restitutionSlider->connect(
+		"ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
+			restitutionCoeffLabel->setText(
+				std::to_string(sim.restitutionCoeff = value / 100.0f));
+		});
 
 	frictionSlider->setValue(sim.frictionCoeff * 100);
 	frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff));
-	frictionSlider->connect("ValueChanged", [&frictionCoeffLabel, &sim](float value) {
-		frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff = value / 100.0f));
-	});
+	frictionSlider->connect(
+		"ValueChanged", [&frictionCoeffLabel, &sim](float value) {
+			frictionCoeffLabel->setText(
+				std::to_string(sim.frictionCoeff = value / 100.0f));
+		});
 
 	double time = 0;
 	bool pauseSimulation = true;
@@ -233,8 +249,10 @@ int main(int argc, char **argv) {
 						controllerWindow.close();
 					}
 					else if (event.key.code == sf::Keyboard::A) {
-						auto pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-						sim.addObject(new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
+						auto pos = window.mapPixelToCoords(
+							sf::Mouse::getPosition(window));
+						sim.addObject(
+							new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
 					}
 					else if (event.key.code == sf::Keyboard::Space) {
 						pauseSimulation = !pauseSimulation;
@@ -253,14 +271,16 @@ int main(int argc, char **argv) {
 								case RIGIDSHAPE:
 									break;
 								case LINE: {
-									auto obj = static_cast<Line *>(object.get());
+									auto obj =
+										static_cast<Line *>(object.get());
 									printLn(
-										"LINE", obj->start.x, obj->start.y, obj->start.x,
-										obj->end.y);
+										"LINE", obj->start.x, obj->start.y,
+										obj->start.x, obj->end.y);
 									break;
 								}
 								case PARTICLE: {
-									auto obj = static_cast<Particle *>(object.get());
+									auto obj =
+										static_cast<Particle *>(object.get());
 									printLn("PARTICLE", obj->pos.x, obj->pos.y);
 									break;
 								}
@@ -322,8 +342,8 @@ int main(int argc, char **argv) {
 			const double top = view.getCenter().y - view.getSize().y / 2,
 						 bottom = view.getCenter().y + view.getSize().y / 2;
 			drawUtil.quad(
-				{Vector2D(left, top), Vector2D(right, top), Vector2D(right, bottom),
-				 Vector2D(left, bottom)},
+				{Vector2D(left, top), Vector2D(right, top),
+				 Vector2D(right, bottom), Vector2D(left, bottom)},
 				sf::Color::Red, 5);
 		}
 		for (const auto &object : sim.objects) {
@@ -339,25 +359,31 @@ int main(int argc, char **argv) {
 					drawUtil.line(obj->start, obj->end, sf::Color::Green);
 					drawUtil.line(
 						0.5 * obj->start + 0.5 * obj->end,
-						0.5 * obj->start + 0.5 * obj->end + obj->normal, sf::Color::Magenta);
+						0.5 * obj->start + 0.5 * obj->end + obj->normal,
+						sf::Color::Magenta);
 					break;
 				}
 				case PARTICLE: {
 					auto obj = static_cast<Particle *>(object.get());
 					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
 					if (showBox) {
-						drawUtil.line(obj->pos, obj->pos + obj->vel, sf::Color::White);
+						drawUtil.line(
+							obj->pos, obj->pos + obj->vel, sf::Color::White);
 					}
 					break;
 				}
 				case BALL: {
 					const auto obj = static_cast<Ball *>(object.get());
 					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
-					auto radiusVec = Vector2D(std::cos(obj->angle), std::sin(obj->angle));
-					drawUtil.line(obj->pos, obj->pos + obj->rad * radiusVec, sf::Color::Yellow);
+					auto radiusVec =
+						Vector2D(std::cos(obj->angle), std::sin(obj->angle));
+					drawUtil.line(
+						obj->pos, obj->pos + obj->rad * radiusVec,
+						sf::Color::Yellow);
 					drawUtil.line(
 						obj->pos + radiusVec,
-						obj->pos + obj->rad * radiusVec + obj->angVel * radiusVec.rotate(1, 0),
+						obj->pos + obj->rad * radiusVec +
+							obj->angVel * radiusVec.rotate(1, 0),
 						sf::Color::Yellow);
 					if (!pauseSimulation) {
 						auto KE = 0.5 * obj->mass * obj->vel.lenSq(),
@@ -378,7 +404,8 @@ int main(int argc, char **argv) {
 			}
 			if (showBox)
 				drawUtil.quad(
-					{Vector2D(object->left, object->top), Vector2D(object->right, object->top),
+					{Vector2D(object->left, object->top),
+					 Vector2D(object->right, object->top),
 					 Vector2D(object->right, object->bottom),
 					 Vector2D(object->left, object->bottom)},
 					sf::Color::Red);

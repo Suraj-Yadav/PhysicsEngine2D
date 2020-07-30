@@ -22,17 +22,13 @@ class DrawUtil {
 	~DrawUtil();
 
 	void line(
-		const Vector2D &a,
-		const Vector2D &b,
-		const sf::Color &c1,
-		const sf::Color &c2,
-		int width = 0);
+		const Vector2D &a, const Vector2D &b, const sf::Color &c1,
+		const sf::Color &c2, int width = 0);
 	void drawCircle(const Vector2D &cen, double rad, const sf::Color &c);
 	void drawText(
 		std::string str, const Vector2D &pos, int size, const sf::Color &c);
 	void quad(
-		const std::array<Vector2D, 4> &points,
-		const sf::Color &col,
+		const std::array<Vector2D, 4> &points, const sf::Color &col,
 		int width = 0) {
 		line(points[0], points[1], col, col, width);
 		line(points[1], points[2], col, col, width);
@@ -40,9 +36,7 @@ class DrawUtil {
 		line(points[3], points[0], col, col, width);
 	}
 	void line(
-		const Vector2D &a,
-		const Vector2D &b,
-		const sf::Color &c,
+		const Vector2D &a, const Vector2D &b, const sf::Color &c,
 		int width = 0) {
 		line(a, b, c, c, width);
 	}
@@ -56,4 +50,4 @@ class DrawUtil {
 
 void drawGrid(sf::RenderTarget &window, bool change);
 
-#endif	// DRAW_UTIL_H
+#endif  // DRAW_UTIL_H

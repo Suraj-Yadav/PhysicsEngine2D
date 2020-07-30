@@ -144,14 +144,10 @@ void resultFromFont(
 			}
 
 			fonts.emplace_back(
-				psName,
-				postscriptName,
-				family,
-				style,
+				psName, postscriptName, family, style,
 				(fontManager::FontWeight)font->GetWeight(),
 				(fontManager::FontWidth)font->GetStretch(),
-				font->GetStyle() == DWRITE_FONT_STYLE_ITALIC,
-				monospace);
+				font->GetStyle() == DWRITE_FONT_STYLE_ITALIC, monospace);
 
 			fileLoader->Release();
 		}
@@ -168,8 +164,7 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 	IDWriteFactory *factory = nullptr;
 
 	HR(DWriteCreateFactory(
-		DWRITE_FACTORY_TYPE_SHARED,
-		__uuidof(IDWriteFactory),
+		DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
 		reinterpret_cast<IUnknown **>(&factory)));
 
 	// Get the system font collection.
@@ -222,9 +217,7 @@ auto fontMatches(
 		   OPT_EQUAL_UTIL(result, description, family, "") &&
 		   OPT_EQUAL_UTIL(result, description, style, "") &&
 		   OPT_EQUAL_UTIL(
-			   result,
-			   description,
-			   weight,
+			   result, description, weight,
 			   fontManager::FontWeight::Undefined) &&
 		   OPT_EQUAL_UTIL(
 			   result, description, width, fontManager::FontWidth::Undefined) &&
@@ -239,9 +232,8 @@ fontManager::FontDescriptor fontManager::findFont(
 	const fontManager::FontDescriptor &desc) {
 	auto allFonts = getAllFonts();
 	auto result = std::find_if(
-		allFonts.begin(), allFonts.end(), [&desc](const auto &res) {
-			return fontMatches(res, desc);
-		});
+		allFonts.begin(), allFonts.end(),
+		[&desc](const auto &res) { return fontMatches(res, desc); });
 	if (result != allFonts.end()) {
 		return *result;
 	}
