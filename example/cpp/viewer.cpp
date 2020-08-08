@@ -51,7 +51,7 @@ void initialize(
 		std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
 	controllerWindow.setPosition({200, 200});
-	window.setPosition({200 + 300 * scale, 200});
+	window.setPosition({static_cast<int>(200 + 300 * scale), 200});
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
 		iss >> type;

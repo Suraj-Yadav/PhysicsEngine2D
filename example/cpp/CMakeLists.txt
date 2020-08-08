@@ -4,11 +4,17 @@ set(COMMON_SRC drawUtil.cpp fontManager.cpp)
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 find_package(TGUI REQUIRED)
 
-link_libraries(Dwrite)
-#add_library(profiler SHARED IMPORTED) # or STATIC instead of SHARED
-#set_target_properties(profiler PROPERTIES
-#  IMPORTED_LOCATION "/usr/local/Cellar/gperftools/2.7/lib/libprofiler.a"
-#)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    link_libraries(Dwrite)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    add_library(profiler SHARED IMPORTED) # or STATIC instead of SHARED
+    set_target_properties(profiler PROPERTIES
+        IMPORTED_LOCATION "/usr/local/Cellar/gperftools/2.7/lib/libprofiler.a"
+    )
+endif()
+
 
 
 macro(add_example target)
@@ -24,7 +30,12 @@ macro(add_example target)
     set_property(TARGET ${target} PROPERTY CXX_STANDARD_REQUIRED ON)
 	target_compile_options(${target} PRIVATE "-Werror=multichar" -Wextra -Wall -Wunused -g -Ofast)
 	target_link_libraries(${target} PRIVATE sfml-graphics tgui)
-	target_link_libraries(${target} LINK_PUBLIC ${PROJECT_NAME})
+    target_link_libraries(${target} LINK_PUBLIC ${PROJECT_NAME})
+    
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	    target_link_libraries(${target} PRIVATE profiler)
+    endif()
+    
 	
 	if(CMAKE_BUILD_TYPE STREQUAL "Profile")
 		if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

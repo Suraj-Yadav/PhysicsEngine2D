@@ -9,4 +9,4 @@ enum Type {
 	BALL = 4385,
 	BOX = 4386,
 };
-#endif  // CONSTANTS_H
+#endif	// CONSTANTS_H
