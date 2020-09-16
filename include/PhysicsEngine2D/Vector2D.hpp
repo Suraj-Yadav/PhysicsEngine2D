@@ -2,6 +2,9 @@
 #define VECTOR2D_H
 
 #define dataType double
+#define VECTOR_SIZE 2
+
+#define _USE_MATH_DEFINES
 
 #include <cmath>
 #include <ostream>
@@ -26,6 +29,12 @@ class Vector2D {
 
 	dataType x;
 	dataType y;
+
+	inline dataType operator[](size_t i) const {
+		i = i >= VECTOR_SIZE ? i % VECTOR_SIZE : i;
+		if (i == 0) return x;
+		return y;
+	}
 
 	inline Vector2D &operator+=(const Vector2D &that) {
 		this->x += that.x;
@@ -94,10 +103,10 @@ class Vector2D {
 	}
 
 	inline Vector2D proj(const Vector2D &that) const {
-		return this->dot(that) * that.unit();
+		return that.unit() * this->dot(that);
 	}
 	inline Vector2D projOnUnit(const Vector2D &that) const {
-		return this->dot(that) * that;
+		return that * this->dot(that);
 	}
 
 	inline Vector2D rotate(double s, double c) const {
@@ -139,4 +148,4 @@ inline dataType distFromLine(
 		return (pt - (start + param * (end - start))).lenSq();
 }
 
-#endif  // VECTOR2D_H
+#endif	// VECTOR2D_H

@@ -49,7 +49,9 @@ void initialize(
 
 	const float scale =
 		std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
-	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
+
+	printLn(scale);
+	controllerWindow.setSize({unsigned(800 * scale), unsigned(600 * scale)});
 	controllerWindow.setPosition({200, 200});
 	window.setPosition({static_cast<int>(200 + 300 * scale), 200});
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
@@ -326,8 +328,9 @@ int main(int argc, char **argv) {
 		if (!pauseSimulation) {
 			auto timeLapse = std::min(FPSClock.restart(), sf::seconds(0.1));
 			time += timeLapse.asSeconds();
-			sim.simulate(timeLapse.asSeconds());
+			sim.simulate(timeLapse.asSeconds(), 1);
 			timeLabel->setText("Time: " + std::to_string(time) + " s");
+			break;
 			// if (time >= 20) {
 			// 	break;
 			// }

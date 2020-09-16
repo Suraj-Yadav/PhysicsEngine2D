@@ -28,7 +28,7 @@ class BaseShape {
 		if (this->bottom > anotherShape.top) return false;
 		return true;
 	}
-	friend std::ostream &operator<<(std::ostream &out, BaseShape const &b) {
+	friend std::ostream &operator<<(std::ostream &out, BaseShape const &) {
 		return out << "BaseShape"
 				   << "[]";
 	}
@@ -168,7 +168,7 @@ class Box final : public RigidShape {
 		double height, double initialAngle = 0,
 		double initialAngularVelocity = 0)
 		: RigidShape(
-			  pos, pos, mass, mass * (width * width + height * height) / 12.0,
+			  pos, vel, mass, mass * (width * width + height * height) / 12.0,
 			  initialAngle, initialAngularVelocity),
 		  w(width),
 		  h(height) {
@@ -185,9 +185,12 @@ class Line final : public BaseShape {
    public:
 	Line(const Vector2D &a, const Vector2D &b)
 		: start(a), end(b), normal((b - a).rotate(1, 0).unit()) {
+		const double padding = std::max(0.05, 0.01 * (a - b).len());
 		setBounds(
-			std::min(start.x, end.x) - 0.05, std::min(start.y, end.y) - 0.05,
-			std::max(start.x, end.x) + 0.05, std::max(start.y, end.y) + 0.05);
+			std::min(start.x, end.x) - padding,
+			std::min(start.y, end.y) - padding,
+			std::max(start.x, end.x) + padding,
+			std::max(start.y, end.y) + padding);
 	}
 	~Line() {}
 	Type getClass() { return LINE; }
@@ -210,4 +213,4 @@ inline bool isTypeof(int a, int b) {
 	return a == b;
 }
 
-#endif  // SHAPE_H
+#endif	// SHAPE_H

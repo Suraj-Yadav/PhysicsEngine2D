@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "IntervalTree.hpp"
+#include "KdTree.hpp"
 #include "Shapes.hpp"
 
 class ForceField {
@@ -40,7 +41,6 @@ struct Event {
 };
 
 class Simulator {
-	std::vector<std::pair<int, int>> getCollisions();
 	bool manageCollision(Particle &first, Particle &second, float delTime);
 	bool manageCollision(Ball &b, Line &l, float delTime);
 	bool manageCollision(Box &b, Line &l, float delTime);
@@ -50,6 +50,8 @@ class Simulator {
 	std::vector<Event> xEvents;
 
    public:
+	std::vector<std::pair<int, int>> getCollisions();
+	std::vector<std::pair<int, int>> getCollisions1();
 	float restitutionCoeff;
 	float frictionCoeff;
 	Simulator(
@@ -62,9 +64,9 @@ class Simulator {
 
 	void addForceField(const ForceField forceField);
 
-	void simulate(float delta);
+	void simulate(float delta, int collisionHandler = 0);
 
 	void clear();
 };
 
-#endif  // SIMULATION_H_INCLUDED
+#endif	// SIMULATION_H_INCLUDED

@@ -15,9 +15,10 @@ template <typename... Args> void printLn(Args... args) { print(args...); cout<<n
 inline void printF(const char *&format) { cout << format; }
 template <typename T, typename... Args> void printF(const char *format, T t, Args... args) {
 while (*format != '%' && *format) {cout.put(*format++);} if (*format++ == '\0') {return;} cout << t, printF( format, args...);}
-template <typename T> inline void printC(T t) { for (auto &elem : t) print(elem, ""); printLn(); }
+template <typename T> inline void printContainer(T t) { for (auto &elem : t) print(elem, ""); printLn(); }
 #define NORMAL_IO_SPEEDUP std::ios_base::sync_with_stdio(false),std::cin.tie(NULL);
 #define debug(x) #x, x
+#define printC(x) printLn(#x), printContainer(x)
 // clang-format on
 
-#endif  // UTIL_HPP
+#endif	// UTIL_HPP

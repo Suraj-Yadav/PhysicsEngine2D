@@ -24,7 +24,8 @@ std::string str(const Vector2D &a) {
 }
 
 inline bool operator<(const Event &a, const Event &b) {
-	return a.xCoord < b.xCoord || a.xCoord == b.xCoord && a.isStart < b.isStart;
+	return a.xCoord < b.xCoord ||
+		   (a.xCoord == b.xCoord && a.isStart < b.isStart);
 	// return std::tie(a.xCoord, a.isStart) < std::tie(b.xCoord, b.isStart);
 }
 
@@ -65,8 +66,47 @@ std::vector<std::pair<int, int>> Simulator::getCollisions() {
 	return collisions;
 }
 
-bool Simulator::manageCollision(
-	Particle &first, Particle &second, float delTime) {
+std::vector<std::pair<int, int>> Simulator::getCollisions1() {
+	std::vector<std::pair<int, int>> collisions;
+	std::vector<Vector2D> points;
+	std::vector<int> values;
+	points.reserve(4 * objects.size());
+	values.reserve(4 * objects.size());
+
+	const auto sine = std::sin(M_PI / 12);
+	const auto cosine = std::cos(M_PI / 12);
+
+	for (size_t i = 0; i < objects.size(); i++) {
+		const auto &obj = objects[i];
+		values.emplace_back(i);
+		points.push_back(Vector2D(obj->left, obj->bottom).rotate(sine, cosine));
+
+		values.emplace_back(i);
+		points.push_back(Vector2D(obj->left, obj->top).rotate(sine, cosine));
+
+		values.emplace_back(i);
+		points.push_back(
+			Vector2D(obj->right, obj->bottom).rotate(sine, cosine));
+
+		values.emplace_back(i);
+		points.push_back(Vector2D(obj->right, obj->top).rotate(sine, cosine));
+	}
+
+	KdTree<int> kdTree(points, values);
+
+	for (size_t i = 0; i < objects.size(); i++) {
+		const auto &obj = objects[i];
+		const AABB aabb(obj->left, obj->right, obj->bottom, obj->top);
+		auto inside = kdTree.range(aabb);
+		for (auto &elem : inside) {
+			collisions.emplace_back(i, elem);
+		}
+	}
+
+	return collisions;
+}
+
+bool Simulator::manageCollision(Particle &first, Particle &second, float) {
 	Vector2D n = second.pos - first.pos;
 	float dist = n.lenSq();
 	if (dist <= (first.rad + second.rad) * (first.rad + second.rad)) {
@@ -88,7 +128,7 @@ bool Simulator::manageCollision(
 	}
 	return false;
 }
-bool Simulator::manageCollision(Ball &b, Line &l, float delTime) {
+bool Simulator::manageCollision(Ball &b, Line &l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.rad * b.rad) {
 		dist = sqrt(dist) - b.rad;
@@ -111,7 +151,7 @@ bool Simulator::manageCollision(Ball &b, Line &l, float delTime) {
 	}
 	return false;
 }
-bool Simulator::manageCollision(Box &b, Line &l, float delTime) {
+bool Simulator::manageCollision(Box &b, Line &l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.w * b.h) {
 		dist = sqrt(dist) - sqrt(b.w * b.h);
@@ -122,13 +162,13 @@ bool Simulator::manageCollision(Box &b, Line &l, float delTime) {
 				b.pos +
 					0.5 * sqrt(b.w * b.h) *
 						Vector2D(
-							std::cos(b.angle), std::sin(b.angle)));  // commands
+							std::cos(b.angle), std::sin(b.angle)));	 // commands
 		// b.acc += -projOnUnit(b.acc, l.normal);
 		return true;
 	}
 	return false;
 }
-bool Simulator::manageCollision(Particle &b, Line &l, float delTime) {
+bool Simulator::manageCollision(Particle &b, Line &l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.rad * b.rad) {
 		dist = sqrt(dist) - b.rad;
@@ -148,7 +188,7 @@ bool Simulator::manageCollision(Particle &b, Line &l, float delTime) {
 	}
 	return false;
 }
-void Simulator::simulate(float seconds) {
+void Simulator::simulate(float seconds, int) {
 	const float delta = seconds / subStep;
 	for (unsigned step = 0; step < subStep; ++step) {
 		for (auto &object : objects) {
@@ -183,7 +223,37 @@ void Simulator::simulate(float seconds) {
 				}
 			}
 		}
-		auto possibleCollisions = getCollisions();
+		std::vector<std::pair<int, int>> possibleCollisions = getCollisions();
+		std::vector<std::pair<int, int>> possibleCollisions1 = getCollisions1();
+
+		printLn(
+			debug(possibleCollisions.size()),
+			debug(possibleCollisions1.size()));
+
+		std::sort(possibleCollisions.begin(), possibleCollisions.end());
+		possibleCollisions.erase(
+			std::unique(possibleCollisions.begin(), possibleCollisions.end()),
+			possibleCollisions.end());
+
+		std::sort(possibleCollisions1.begin(), possibleCollisions1.end());
+		possibleCollisions1.erase(
+			std::unique(possibleCollisions1.begin(), possibleCollisions1.end()),
+			possibleCollisions1.end());
+
+		printLn(
+			debug(possibleCollisions.size()),
+			debug(possibleCollisions1.size()));
+
+		// switch (collisionHandler) {
+		// 	case 1:
+		// 		/* code */
+		// 		possibleCollisions = getCollisions1();
+		// 		break;
+
+		// 	default:
+		// 		possibleCollisions = getCollisions();
+		// 		break;
+		// }
 
 		for (auto &p : possibleCollisions) {
 			int i = p.first, j = p.second;

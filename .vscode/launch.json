@@ -8,18 +8,18 @@
 			"name": "Debug",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/build/Debug/example/cpp/viewer",
+			"program": "${workspaceFolder}/build/Debug/example/cpp/test",
 			"args": [
 				"example/cpp/bouncingBall.txt"
 			],
-			"stopAtEntry": false,
+			"stopAtEntry": true,
 			"cwd": "${workspaceFolder}",
 			"environment": [],
-			"externalConsole": false,
 			"osx": {
 				"MIMode": "lldb"
 			},
 			"windows": {
+				"externalConsole": true,
 				"MIMode": "gdb",
 				"miDebuggerPath": "G:/TDM-GCC-64/bin/gdb.exe"
 			},
