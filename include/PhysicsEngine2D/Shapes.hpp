@@ -20,7 +20,7 @@ class BaseShape {
    public:
 	BaseShape() : top(0), left(0), right(0), bottom(0) {}
 	virtual ~BaseShape() {}
-	virtual Type getClass() { return BASESHAPE; }
+	virtual ShapeType getClass() { return BASESHAPE; }
 	bool intersects(const BaseShape &anotherShape) const {
 		if (this->right < anotherShape.left) return false;
 		if (this->left > anotherShape.right) return false;
@@ -50,7 +50,7 @@ class DynamicShape : public BaseShape {
 		pos += vel * delTime;
 		updateAABB(delTime);
 	}
-	virtual Type getClass() { return DYNAMICSHAPE; }
+	virtual ShapeType getClass() { return DYNAMICSHAPE; }
 	friend std::ostream &operator<<(std::ostream &out, DynamicShape const &b) {
 		return out << "DynamicShape"
 				   << "["
@@ -78,7 +78,22 @@ class Particle final : public DynamicShape {
 		updateAABB(0);
 	}
 	~Particle() {}
-	Type getClass() { return PARTICLE; }
+	ShapeType getClass() { return PARTICLE; }
+	friend std::ostream &operator<<(std::ostream &out, Particle const &b) {
+		return out << "Particle"
+				   << "["
+				   << "rad:" << b.rad << ", "
+				   << static_cast<const DynamicShape &>(b) << "]";
+	}
+
+	void debugDraw(std::ostream &out, std::string label) {
+		// writeF(
+		// 	out, "draw(circle(%, %), blue,
+		// L=Label(\"%\",overwrite(Move)));\n", 	pos, rad, label);
+		// writeF( 	out, "draw(box(%, %));\n", Vector2D(left, top),
+		// 	Vector2D(right, bottom));
+	}
+
 	double rad;
 };
 
@@ -134,7 +149,7 @@ class Ball final : public RigidShape {
 		updateAABB(0);
 	}
 	~Ball() {}
-	Type getClass() { return BALL; }
+	ShapeType getClass() { return BALL; }
 	friend std::ostream &operator<<(std::ostream &out, Ball const &b) {
 		return out << "Ball"
 				   << "[" << static_cast<const RigidShape &>(b) << "]";
@@ -175,7 +190,7 @@ class Box final : public RigidShape {
 		updateAABB(0);
 	}
 	~Box() {}
-	Type getClass() { return BOX; }
+	ShapeType getClass() { return BOX; }
 	double w;
 	double h;
 	std::array<Vector2D, 4> corner;
@@ -193,13 +208,19 @@ class Line final : public BaseShape {
 			std::max(start.y, end.y) + padding);
 	}
 	~Line() {}
-	Type getClass() { return LINE; }
+	ShapeType getClass() { return LINE; }
 	friend std::ostream &operator<<(std::ostream &out, Line const &b) {
 		return out << "Line"
 				   << "["
 				   << "start:" << b.start << ", end:" << b.end << ", normal"
 				   << b.normal << ", " << static_cast<const BaseShape &>(b)
 				   << "]";
+	}
+
+	void debugDraw(std::ostream &out, std::string label) {
+		// writeF(
+		// 	out, "draw( % -- %, L=Label(\"%\",overwrite(Move)));\n", start,
+		// end, 	label);
 	}
 
 	Vector2D start;

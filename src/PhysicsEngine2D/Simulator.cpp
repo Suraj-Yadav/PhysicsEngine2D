@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <set>
 #include <vector>
 
 Simulator::Simulator(
@@ -49,8 +50,16 @@ std::vector<std::pair<int, int>> Simulator::getCollisions() {
 			auto list = st.searchAll(
 				objects[event.index]->bottom, objects[event.index]->top);
 			for (auto &j : list) {
-				if (objects[event.index]->intersects(*objects[j]))
-					collisions.emplace_back(event.index, j);
+				if (objects[event.index]->intersects(*objects[j]) &&
+					(objects[event.index]->getClass() != LINE ||
+					 objects[j]->getClass() != LINE)) {
+					if (event.index > j) {
+						collisions.emplace_back(j, event.index);
+					}
+					else {
+						collisions.emplace_back(event.index, j);
+					}
+				}
 			}
 			st.insert(
 				objects[event.index]->bottom, objects[event.index]->top,
@@ -69,39 +78,53 @@ std::vector<std::pair<int, int>> Simulator::getCollisions() {
 std::vector<std::pair<int, int>> Simulator::getCollisions1() {
 	std::vector<std::pair<int, int>> collisions;
 	std::vector<Vector2D> points;
-	std::vector<int> values;
+	std::vector<size_t> values;
 	points.reserve(4 * objects.size());
 	values.reserve(4 * objects.size());
 
-	const auto sine = std::sin(M_PI / 12);
-	const auto cosine = std::cos(M_PI / 12);
-
 	for (size_t i = 0; i < objects.size(); i++) {
 		const auto &obj = objects[i];
 		values.emplace_back(i);
-		points.push_back(Vector2D(obj->left, obj->bottom).rotate(sine, cosine));
+		points.emplace_back(obj->left, obj->bottom);
 
 		values.emplace_back(i);
-		points.push_back(Vector2D(obj->left, obj->top).rotate(sine, cosine));
+		points.emplace_back(obj->left, obj->top);
 
 		values.emplace_back(i);
-		points.push_back(
-			Vector2D(obj->right, obj->bottom).rotate(sine, cosine));
+		points.emplace_back(obj->right, obj->bottom);
 
 		values.emplace_back(i);
-		points.push_back(Vector2D(obj->right, obj->top).rotate(sine, cosine));
+		points.emplace_back(obj->right, obj->top);
 	}
 
-	KdTree<int> kdTree(points, values);
+	KdTree<size_t> kdTree(points, values);
 
-	for (size_t i = 0; i < objects.size(); i++) {
-		const auto &obj = objects[i];
-		const AABB aabb(obj->left, obj->right, obj->bottom, obj->top);
-		auto inside = kdTree.range(aabb);
-		for (auto &elem : inside) {
-			collisions.emplace_back(i, elem);
-		}
-	}
+	// kdTree.debugDraw(std::cerr);
+
+	// for (size_t i = 0; i < objects.size(); i++) {
+	// 	const auto &obj = objects[i];
+	// 	const Range2D range2d(obj->left, obj->right, obj->bottom, obj->top);
+	// 	// printLn(i, obj->left, obj->right, obj->bottom, obj->top);
+	// 	auto inside = kdTree.rangeQuery<std::vector>(range2d);
+	// 	for (auto &elem : inside) {
+	// 		// if (i > elem) {
+	// 		// 	printLn(elem, i);
+	// 		// }
+	// 		// else {
+	// 		// 	printLn(i, elem);
+	// 		// }
+	// 		if (i != elem && objects[elem]->intersects(*objects[i]) &&
+	// 			(objects[i]->getClass() != LINE ||
+	// 			 objects[elem]->getClass() != LINE)) {
+	// 			if (i > elem) {
+	// 				collisions.emplace_back(elem, i);
+	// 			}
+	// 			else {
+	// 				collisions.emplace_back(i, elem);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	return collisions;
 }
@@ -188,6 +211,70 @@ bool Simulator::manageCollision(Particle &b, Line &l, float) {
 	}
 	return false;
 }
+
+void Simulator::debugDraw(std::ostream &out) {
+	out << "unitsize(0.1cm);";
+	for (size_t i = 0; i < objects.size(); i++) {
+		const auto &object = objects.at(i);
+		switch (object->getClass()) {
+			case BASESHAPE:
+				break;
+			case DYNAMICSHAPE:
+				break;
+			case RIGIDSHAPE:
+				break;
+			case LINE: {
+				auto obj = static_cast<Line *>(object.get());
+				obj->debugDraw(out, std::to_string(i));
+				break;
+			}
+			case PARTICLE: {
+				auto obj = static_cast<Particle *>(object.get());
+				obj->debugDraw(out, std::to_string(i));
+				// printLn(
+				// 	"PARTICLE", obj->mass, obj->rad, obj->pos.x, obj->pos.y);
+				break;
+			}
+				// case BALL: {
+				// 	const auto obj = static_cast<Ball *>(object.get());
+				// 	drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
+				// 	auto radiusVec =
+				// 		Vector2D(std::cos(obj->angle), std::sin(obj->angle));
+				// 	drawUtil.line(
+				// 		obj->pos, obj->pos + obj->rad * radiusVec,
+				// 		sf::Color::Yellow);
+				// 	drawUtil.line(
+				// 		obj->pos + radiusVec,
+				// 		obj->pos + obj->rad * radiusVec +
+				// 			obj->angVel * radiusVec.rotate(1, 0),
+				// 		sf::Color::Yellow);
+				// 	if (!pauseSimulation) {
+				// 		auto KE = 0.5 * obj->mass * obj->vel.lenSq(),
+				// 			 PE = 9.8 * obj->mass * obj->pos.y;
+				// 		// printLn(time, ',', KE, ',', PE, ',', KE + PE);
+				// 		// 	std::cout << time << ',' << obj->pos.x << ',' <<
+				// 		// obj->pos.y << ',' << obj->vel.x << ',' << obj->vel.y
+				// 		// << '\n';
+				// 	}
+
+				// 	break;
+				// }
+				// case BOX: {
+				// 	auto obj = static_cast<Box *>(object.get());
+				// 	drawUtil.quad(obj->corner, sf::Color::Blue);
+				// 	break;
+				// }
+		}
+		// if (showBox)
+		// 	drawUtil.quad(
+		// 		{Vector2D(object->left, object->top),
+		// 		 Vector2D(object->right, object->top),
+		// 		 Vector2D(object->right, object->bottom),
+		// 		 Vector2D(object->left, object->bottom)},
+		// 		sf::Color::Red);
+	}
+}
+
 void Simulator::simulate(float seconds, int) {
 	const float delta = seconds / subStep;
 	for (unsigned step = 0; step < subStep; ++step) {
@@ -223,12 +310,13 @@ void Simulator::simulate(float seconds, int) {
 				}
 			}
 		}
+
 		std::vector<std::pair<int, int>> possibleCollisions = getCollisions();
 		std::vector<std::pair<int, int>> possibleCollisions1 = getCollisions1();
 
-		printLn(
-			debug(possibleCollisions.size()),
-			debug(possibleCollisions1.size()));
+		// printLn(
+		// 	debug(possibleCollisions.size()),
+		// 	debug(possibleCollisions1.size()));
 
 		std::sort(possibleCollisions.begin(), possibleCollisions.end());
 		possibleCollisions.erase(
@@ -240,9 +328,59 @@ void Simulator::simulate(float seconds, int) {
 			std::unique(possibleCollisions1.begin(), possibleCollisions1.end()),
 			possibleCollisions1.end());
 
-		printLn(
-			debug(possibleCollisions.size()),
-			debug(possibleCollisions1.size()));
+		std::vector<std::pair<int, int>> AMinusB, BMinusA;
+
+		std::set_difference(
+			possibleCollisions.begin(), possibleCollisions.end(),
+			possibleCollisions1.begin(), possibleCollisions1.end(),
+			std::inserter(AMinusB, AMinusB.begin()));
+
+		std::set_difference(
+			possibleCollisions1.begin(), possibleCollisions1.end(),
+			possibleCollisions.begin(), possibleCollisions.end(),
+			std::inserter(BMinusA, BMinusA.begin()));
+
+		if (AMinusB.size() != 0 || BMinusA.size() != 0) {
+			// printC(AMinusB);
+			// printC(BMinusA);
+			std::set<int> diffItems;
+			for (auto &elem : AMinusB) {
+				diffItems.insert(elem.first);
+				diffItems.insert(elem.second);
+			}
+			for (auto &elem : BMinusA) {
+				diffItems.insert(elem.first);
+				diffItems.insert(elem.second);
+			}
+
+			// printLn(debug(AMinusB.size()), debug(BMinusA.size()));
+
+			// for (auto &object : objects) {
+			// 	const auto &object = objects.at(elem);
+			// 	// if (object->getClass() == LINE) {
+			// 	// 	auto obj = static_cast<Line *>(object.get());
+			// 	// 	obj->debugDraw(std::cerr, std::to_string(elem));
+			// 	// }
+			// 	if (object->getClass() == PARTICLE) {
+			// 		auto obj = static_cast<Particle *>(object.get());
+			// 		obj->debugDraw(std::cerr, std::to_string(elem));
+			// 		printLn(
+			// 			"PARTICLE", obj->mass, obj->rad, obj->pos.x,
+			// 			obj->pos.y);
+			// 	}
+			// }
+			// debugDraw(std::cerr);
+		}
+
+		// if (possibleCollisions.size() != possibleCollisions1.size()) {
+		// printLn(
+		// 	debug(possibleCollisions.size()),
+		// 	debug(possibleCollisions1.size()));
+
+		// printC(possibleCollisions);
+		// printC(possibleCollisions1);
+		// debugDraw(std::cerr);
+		// }
 
 		// switch (collisionHandler) {
 		// 	case 1:
@@ -257,8 +395,8 @@ void Simulator::simulate(float seconds, int) {
 
 		for (auto &p : possibleCollisions) {
 			int i = p.first, j = p.second;
-			Type first = objects[i]->getClass(),
-				 second = objects[j]->getClass();
+			ShapeType first = objects[i]->getClass(),
+					  second = objects[j]->getClass();
 			if (first == LINE && second == PARTICLE)
 				manageCollision(
 					*static_cast<Particle *>(objects[j].get()),

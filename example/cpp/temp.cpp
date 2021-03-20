@@ -1,3 +1,5 @@
+#include <PhysicsEngine2D/Range.hpp>
+#include <PhysicsEngine2D/RangeTree2D.hpp>
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
 #include <filesystem>
@@ -137,23 +139,57 @@ void initialize(const std::filesystem::path filePath, Simulator &sim) {
 int main(int argc, char **argv) {
 	NORMAL_IO_SPEEDUP;
 
-	std::vector<std::string> args;
-	for (int i = 0; i < argc; i++) {
-		args.emplace_back(argv[i]);
-	}
+	// const auto SIZE = 10;
 
-	const auto initFilePath = std::filesystem::absolute(
-		std::filesystem::path("example/cpp/bouncingBall.txt"));
+	// const Range2D<dataType> range2d(-40.0, -10.0, -20.0, 20.0);
 
-	std::filesystem::path rootPath(
-		std::filesystem::absolute(std::filesystem::path(argv[0]))
-			.parent_path());
+	// write(std::cout, SRC, debug(SIZE), "\n");
 
-	Simulator sim(1, 0.9f, 0.9f);
+	// std::cout << "ASY import unicode;\n";
+	// std::cout << "ASY unitsize(2mm);\n";
+	// std::cout << "ASY draw(box((-40,-40), (40,40)));\n";
+	// writeF(
+	// 	std::cout, "ASY draw(box((%,%), (%,%)));\n", range2d.rangeX.start,
+	// 	range2d.rangeY.start, range2d.rangeX.end, range2d.rangeY.end);
 
-	initialize(initFilePath, sim);
+	// // std::cout << "size(100.5,100.5);";
 
-	sim.simulate(0.01, 1);
+	// std::vector<std::string> args;
+	// for (int i = 0; i < argc; i++) {
+	// 	args.emplace_back(argv[i]);
+	// }
+
+	// std::random_device rd;
+	// std::mt19937 gen(rd());
+
+	// const auto left = -40 * 1, right = 40 * 1, bottom = -40 * 1, top = 40 *
+	// 1; std::uniform_real_distribution<> x(left, right);
+	// std::uniform_real_distribution<> y(bottom, top);
+
+	// std::vector<Vector2D> points;
+	// std::vector<int> values;
+
+	// for (size_t i = 0; i < SIZE; i++) {
+	// 	points.emplace_back(x(gen), y(gen));
+	// 	values.emplace_back(i);
+	// }
+
+	// RangeTree2D<int> rangeTree(points, values);
+
+	// auto p = rangeTree.rangeQuery(range2d);
+	// writeC(std::cout, p);
+
+	Particle p({-1, -2}, {-3, -4}, 5, 6);
+	auto &d = static_cast<DynamicShape &>(p);
+	auto &p1 = static_cast<Particle &>(d);
+
+	printLn("p", &p, p.getClass(), p.pos, p.vel, p.rad, p.mass);
+	printLn("p1", &p1, p1.getClass(), p1.pos, p1.vel, p1.rad, p1.mass);
+
+	p1.applyImpulse({7, 8}, {0, 0});
+
+	printLn("p", &p, p.getClass(), p.pos, p.vel, p.rad, p.mass);
+	printLn("p1", &p1, p1.getClass(), p1.pos, p1.vel, p1.rad, p1.mass);
 
 	return 0;
 }

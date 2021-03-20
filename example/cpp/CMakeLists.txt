@@ -6,10 +6,13 @@ find_package(
   COMPONENTS graphics
   REQUIRED)
 find_package(TGUI REQUIRED)
-find_package(benchmark REQUIRED)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   link_libraries(Dwrite)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  link_libraries(fontconfig)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -34,8 +37,7 @@ macro(add_example target)
   set_property(TARGET ${target} PROPERTY CXX_STANDARD_REQUIRED ON)
   target_compile_options(${target} PRIVATE "-Werror=multichar" -Wextra -Wall
                                            -Wunused -g -Ofast)
-  target_link_libraries(${target} PRIVATE sfml-graphics tgui
-                                          benchmark::benchmark)
+  target_link_libraries(${target} PRIVATE sfml-graphics tgui)
   target_link_libraries(${target} LINK_PUBLIC ${PROJECT_NAME})
 
   if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -59,7 +61,7 @@ endmacro()
 
 # add_example(benchmark SOURCES benchmark.cpp RESOURCES )
 
-add_example(test SOURCES test.cpp RESOURCES)
+add_example(temp SOURCES temp.cpp RESOURCES)
 
 # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC}) add_custom_command(
 # TARGET ${PROJECT_NAME} POST_BUILD COMMAND plutil -replace

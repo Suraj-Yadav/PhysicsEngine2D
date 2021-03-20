@@ -1,6 +1,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
-enum Type {
+enum ShapeType {
 	BASESHAPE = 1,
 	DYNAMICSHAPE = 17,
 	LINE = 18,

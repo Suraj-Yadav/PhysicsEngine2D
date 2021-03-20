@@ -7,6 +7,7 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <limits>
 #include <ostream>
 #include <string>
 
@@ -123,6 +124,7 @@ class Vector2D {
 		return std::make_pair(mag, this->operator/(mag));
 	}
 	friend std::ostream &operator<<(std::ostream &out, Vector2D const &v) {
+		out.precision(std::numeric_limits<double>::max_digits10);
 		return out << "(" << v.x << ", " << v.y << ")";
 	}
 };
@@ -147,5 +149,34 @@ inline dataType distFromLine(
 	else
 		return (pt - (start + param * (end - start))).lenSq();
 }
+
+#define comparePair(a1, b1, comparisonOfA2B2) \
+	((a1 < b1) || (!(b1 < a1) && (comparisonOfA2B2)))
+
+// struct AABB {
+// 	Vector2D min, max;
+// 	AABB(dataType left, dataType right, dataType bottom, dataType top)
+// 		: min(left, bottom), max(right, top) {}
+// 	bool contains(const Vector2D &p) const {
+// 		return min.x <= p.x && p.x <= max.x && min.y <= p.y && p.y <= max.y;
+// 	}
+// };
+
+// template <class Type> struct Interval {
+// 	Type low, high;
+// 	inline Interval()
+// 		: low(std::numeric_limits<Type>::max()),
+// 		  high(std::numeric_limits<Type>::lowest()) {}
+// 	inline Interval(Type start, Type end) : low(start), high(end) {}
+
+// 	friend std::ostream &operator<<(std::ostream &out, Interval const &b) {
+// 		return out << "Interval (" << b.low << "," << b.high << ")";
+// 	}
+// };
+
+// template <typename T>
+// bool operator<(const Interval<T> &x, const Interval<T> &y) {
+// 	return comparePair(x.low, x.high, y.low, y.high);
+// }
 
 #endif	// VECTOR2D_H

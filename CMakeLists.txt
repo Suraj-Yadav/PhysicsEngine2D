@@ -13,7 +13,7 @@ add_custom_target(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}/Simulator.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}/Simulator.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}/Collisions.cpp)
 
 add_library(${PROJECT_NAME} ${SRC})
 
@@ -27,10 +27,13 @@ target_compile_options(${PROJECT_NAME} PRIVATE "-Werror=multichar" -Wextra
                                                -Wall -Wunused -g -Ofast)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Profile")
-  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windowss")
     target_compile_options(${PROJECT_NAME} PRIVATE -pg)
     target_link_options(${PROJECT_NAME} PRIVATE -pg)
   endif()
 endif()
 
 add_subdirectory(example)
+
+enable_testing()
+add_subdirectory(test)

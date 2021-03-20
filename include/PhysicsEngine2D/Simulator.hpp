@@ -66,6 +66,8 @@ class Simulator {
 
 	void simulate(float delta, int collisionHandler = 0);
 
+	void debugDraw(std::ostream &);
+
 	void clear();
 };
 

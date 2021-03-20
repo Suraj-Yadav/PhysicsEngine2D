@@ -18,6 +18,8 @@ elif "darwin" in platform:
     Config.set_library_file(
         "/Library/Developer/CommandLineTools/usr/lib/libclang.dylib"
     )
+elif "linux" in platform:
+    Config.set_library_file("/usr/lib/llvm-10/lib/libclang.so.1")
 
 
 def each_class_cursor(cursor):
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     with open(outputFile, "w") as f:
         print("#ifndef CONSTANTS_H", file=f)
         print("#define CONSTANTS_H", file=f)
-        print("enum Type {", file=f)
+        print("enum ShapeType {", file=f)
         for i in tags:
             # print(i.upper(), tags[i])
             print(i.upper(), "=", tags[i], ",", file=f)

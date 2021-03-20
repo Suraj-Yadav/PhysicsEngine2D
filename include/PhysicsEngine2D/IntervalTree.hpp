@@ -4,42 +4,37 @@
 #include <tuple>
 #include <vector>
 
+#include "Range.hpp"
+#include "Vector2D.hpp"
 #include "util.hpp"
 
-#define comparePair(a1, a2, b1, b2) ((a1 < b1) || (!(b1 < a1) && a2 < b2))
+// template <class Type> struct Range {
+// 	Type low, high;
+// 	inline Range()
+// 		: low(std::numeric_limits<Type>::max()),
+// 		  high(std::numeric_limits<Type>::lowest()) {}
+// 	inline Range(Type start, Type end) : low(start), high(end) {}
 
-template <class Type> struct Interval {
-	Type low, high;
-	inline Interval()
-		: low(std::numeric_limits<Type>::max()),
-		  high(std::numeric_limits<Type>::lowest()) {}
-	inline Interval(Type start, Type end) : low(start), high(end) {}
-
-	friend std::ostream &operator<<(std::ostream &out, Interval const &b) {
-		return out << "Interval (" << b.low << "," << b.high << ")";
-	}
-};
-
-template <typename T>
-bool operator<(const Interval<T> &x, const Interval<T> &y) {
-	return comparePair(x.low, x.high, y.low, y.high);
-}
+// 	friend std::ostream &operator<<(std::ostream &out, Range const &b) {
+// 		return out << "Range (" << b.low << "," << b.high << ")";
+// 	}
+// };
 
 template <class KeyType, class ValueType> class AVL {
 	static const int NULL_NODE = -1;
 	struct Node {
-		Interval<KeyType> range;
+		Range<KeyType> range;
 		KeyType maxEnd;
 		int height, balance;
 		int left, right;
 		ValueType value;
-		inline Node(const Interval<KeyType> &interval, ValueType val) {
-			init(interval, val);
+		inline Node(const Range<KeyType> &range, ValueType val) : range(range) {
+			init(range, val);
 		}
 
-		inline void init(const Interval<KeyType> &interval, ValueType val) {
-			range = interval;
-			maxEnd = interval.high;
+		inline void init(const Range<KeyType> &range, ValueType val) {
+			this->range = range;
+			maxEnd = range.end;
 			height = 0;
 			balance = 0;
 			left = NULL_NODE;
@@ -57,15 +52,15 @@ template <class KeyType, class ValueType> class AVL {
 	std::vector<Node> nodes;
 	std::vector<int> freeMemorySlots;
 
-	int newNode(const Interval<KeyType> &interval, ValueType val) {
+	int newNode(const Range<KeyType> &range, ValueType val) {
 		if (freeMemorySlots.size() == 0) {
 			const int newSlot = nodes.size();
-			nodes.emplace_back(interval, val);
+			nodes.emplace_back(range, val);
 			// printLn("newNode From heap", debug(newSlot));
 			return newSlot;
 		}
 		const int newSlot = freeMemorySlots.back();
-		nodes[newSlot].init(interval, val);
+		nodes[newSlot].init(range, val);
 		freeMemorySlots.pop_back();
 		// printLn("newNode From cache", debug(newSlot));
 		return newSlot;
@@ -93,7 +88,7 @@ template <class KeyType, class ValueType> class AVL {
 			nodes[x].height =
 				std::max(nodes[nodes[x].right].height, nodes[x].height);
 		++nodes[x].height;
-		nodes[x].maxEnd = nodes[x].range.high;
+		nodes[x].maxEnd = nodes[x].range.end;
 		if (nodes[x].left != NULL_NODE)
 			nodes[x].maxEnd =
 				std::max(nodes[nodes[x].left].maxEnd, nodes[x].maxEnd);
@@ -101,9 +96,9 @@ template <class KeyType, class ValueType> class AVL {
 			nodes[x].maxEnd =
 				std::max(nodes[nodes[x].right].maxEnd, nodes[x].maxEnd);
 	}
-	int insert(int x, const Interval<KeyType> &range, const ValueType &value) {
+	int insert(int x, const Range<KeyType> &range, const ValueType &value) {
 		if (x == NULL_NODE) return newNode(range, value);
-		if (comparePair(range, value, nodes[x].range, nodes[x].value))
+		if (comparePair(range, nodes[x].range, value < nodes[x].value))
 			nodes[x].left = insert(nodes[x].left, range, value);
 		else
 			nodes[x].right = insert(nodes[x].right, range, value);
@@ -140,12 +135,12 @@ template <class KeyType, class ValueType> class AVL {
 		}
 		return x;
 	}
-	int remove(int x, const Interval<KeyType> &range, const ValueType &value) {
+	int remove(int x, const Range<KeyType> &range, const ValueType &value) {
 		// printLn(debug(x), debug(range), debug(value));
 		if (x == NULL_NODE) return NULL_NODE;
-		if (comparePair(range, value, nodes[x].range, nodes[x].value))
+		if (comparePair(range, nodes[x].range, value < nodes[x].value))
 			nodes[x].left = remove(nodes[x].left, range, value);
-		else if (comparePair(nodes[x].range, nodes[x].value, range, value))
+		else if (comparePair(nodes[x].range, range, nodes[x].value < value))
 			nodes[x].right = remove(nodes[x].right, range, value);
 		else {
 			if (nodes[x].right == NULL_NODE) {
@@ -207,7 +202,7 @@ template <class KeyType, class ValueType> class AVL {
 		return node;
 	}
 	bool intersects(int x, KeyType low, KeyType high) {
-		if (high < nodes[x].range.low) return false;
+		if (high < nodes[x].range.start) return false;
 		if (nodes[x].maxEnd < low) return false;
 		return true;
 	}
@@ -233,10 +228,9 @@ template <class KeyType, class ValueType> class AVL {
    public:
 	AVL() { root = NULL_NODE; }
 	~AVL() {
-		assert(nodes.size() == freeMemorySlots.size());
-		// if (root) {
-		// 	deleteNode(root);
-		// }
+		if (nodes.size() != freeMemorySlots.size()) {
+			throw std::runtime_error("Invalid Memory State For AVL Tree");
+		}
 	}
 	inline void insert(KeyType low, KeyType high, ValueType value) {
 		// printLn("insert", debug(low), debug(high), debug(value));
@@ -261,7 +255,7 @@ template <class KeyType, class ValueType> class AVL {
 
 	void printTree(int x = -2, int indent = 0) {
 		if (x == -2) {
-			printLn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+			// printLn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 			x = root;
 		}
 
@@ -270,7 +264,7 @@ template <class KeyType, class ValueType> class AVL {
 				printTree(nodes[x].left, indent + 1);
 			}
 			for (int i = 0; i < indent; i++) {
-				print('\t');
+				// print('\t');
 			}
 			printLn(x, nodes[x]);
 			if (nodes[x].right != NULL_NODE) {
