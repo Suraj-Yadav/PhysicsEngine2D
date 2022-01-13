@@ -1,5 +1,6 @@
 #include "fontManager.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 #ifdef _WIN32
@@ -206,6 +207,76 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 
 #include <fontconfig/fontconfig.h>
 
+fontManager::FontWeight convertWeight(int weight) {
+	switch (weight) {
+		case FC_WEIGHT_THIN:
+			return fontManager::FontWeight::Thin;
+		case FC_WEIGHT_ULTRALIGHT:
+			return fontManager::FontWeight::UltraLight;
+		case FC_WEIGHT_LIGHT:
+			return fontManager::FontWeight::Light;
+		case FC_WEIGHT_REGULAR:
+			return fontManager::FontWeight::Normal;
+		case FC_WEIGHT_MEDIUM:
+			return fontManager::FontWeight::Medium;
+		case FC_WEIGHT_SEMIBOLD:
+			return fontManager::FontWeight::SemiBold;
+		case FC_WEIGHT_BOLD:
+			return fontManager::FontWeight::Bold;
+		case FC_WEIGHT_EXTRABOLD:
+			return fontManager::FontWeight::UltraBold;
+		case FC_WEIGHT_ULTRABLACK:
+			return fontManager::FontWeight::Heavy;
+		default:
+			return fontManager::FontWeight::Normal;
+	}
+}
+
+fontManager::FontWidth convertWidth(int width) {
+	switch (width) {
+		case FC_WIDTH_ULTRACONDENSED:
+			return fontManager::FontWidth::UltraCondensed;
+		case FC_WIDTH_EXTRACONDENSED:
+			return fontManager::FontWidth::ExtraCondensed;
+		case FC_WIDTH_CONDENSED:
+			return fontManager::FontWidth::Condensed;
+		case FC_WIDTH_SEMICONDENSED:
+			return fontManager::FontWidth::SemiCondensed;
+		case FC_WIDTH_NORMAL:
+			return fontManager::FontWidth::Normal;
+		case FC_WIDTH_SEMIEXPANDED:
+			return fontManager::FontWidth::SemiExpanded;
+		case FC_WIDTH_EXPANDED:
+			return fontManager::FontWidth::Expanded;
+		case FC_WIDTH_EXTRAEXPANDED:
+			return fontManager::FontWidth::ExtraExpanded;
+		case FC_WIDTH_ULTRAEXPANDED:
+			return fontManager::FontWidth::UltraExpanded;
+		default:
+			return fontManager::FontWidth::Normal;
+	}
+}
+
+fontManager::FontDescriptor createFontDescriptor(FcPattern *pattern) {
+	FcChar8 *path, *psName, *family, *style;
+	int weight, width, slant, spacing;
+
+	FcPatternGetString(pattern, FC_FILE, 0, &path);
+	FcPatternGetString(pattern, FC_POSTSCRIPT_NAME, 0, &psName);
+	FcPatternGetString(pattern, FC_FAMILY, 0, &family);
+	FcPatternGetString(pattern, FC_STYLE, 0, &style);
+
+	FcPatternGetInteger(pattern, FC_WEIGHT, 0, &weight);
+	FcPatternGetInteger(pattern, FC_WIDTH, 0, &width);
+	FcPatternGetInteger(pattern, FC_SLANT, 0, &slant);
+	FcPatternGetInteger(pattern, FC_SPACING, 0, &spacing);
+
+	return fontManager::FontDescriptor(
+		(char *)path, (char *)psName, (char *)family, (char *)style,
+		convertWeight(weight), convertWidth(width), slant == FC_SLANT_ITALIC,
+		spacing == FC_MONO);
+}
+
 std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 	std::vector<fontManager::FontDescriptor> fonts;
 
@@ -217,6 +288,14 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 		FC_SLANT, FC_SPACING, NULL);
 
 	FcFontSet *fs = FcFontList(NULL, pattern, os);
+	if (fs == NULL) {
+		return fonts;
+	}
+	for (int i = 0; i < fs->nfont; ++i) {
+		if (fs->fonts[i]) {
+			fonts.push_back(createFontDescriptor(fs->fonts[i]));
+		}
+	}
 
 	FcPatternDestroy(pattern);
 	FcObjectSetDestroy(os);
