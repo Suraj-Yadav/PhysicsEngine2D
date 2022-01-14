@@ -33,7 +33,5 @@
 
 # Folders
 .vscode/*
-!.vscode/tasks.json
-!.vscode/launch.json
 build/
 .mypy_cache/
