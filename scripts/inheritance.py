@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Generate Header file with Inheritance Info
@@ -18,6 +18,8 @@ elif "darwin" in platform:
     Config.set_library_file(
         "/Library/Developer/CommandLineTools/usr/lib/libclang.dylib"
     )
+elif "linux" in platform:
+    Config.set_library_file("/usr/lib/llvm-10/lib/libclang.so.1")
 
 
 def each_class_cursor(cursor):
@@ -90,9 +92,18 @@ if __name__ == "__main__":
     with open(outputFile, "w") as f:
         print("#ifndef CONSTANTS_H", file=f)
         print("#define CONSTANTS_H", file=f)
-        print("enum Type {", file=f)
+        print("enum ShapeType {", file=f)
         for i in tags:
             # print(i.upper(), tags[i])
-            print(i.upper(), "=", tags[i], ",", file=f)
+            print(f"\t{i.upper()} = {bin(tags[i])},  // {tags[i]}", file=f)
         print("};", file=f)
-        print("#endif // CONSTANTS_H", file=f)
+        print("inline const char* getShapeTypeName(const ShapeType& type) {", file=f)
+        print("	switch (type) {", file=f)
+        for i in tags:
+            print(f'\t\tcase {i.upper()}:\n\t\t\treturn "{i.upper()}";', file=f)
+        # case BASESHAPE: return "BASESHAPE";
+        print("	}", file=f)
+        print('	return "";', file=f)
+        print("}", file=f)
+
+        print("#endif\t// CONSTANTS_H", file=f)
