@@ -1,10 +1,14 @@
 #include "drawUtil.hpp"
 
+#include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/Shape.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/OpenGL.hpp>
+#include <fstream>
+#include <random>
 #include <sstream>
 
 #include "fontManager.hpp"
@@ -216,4 +220,115 @@ void drawGrid(sf::RenderTarget &window, bool changed) {
 	window.draw(&Line[0], Line.size(), sf::Lines);
 	gridLable(window, xMarkings, yMarkings);
 	window.setView(view);
+}
+
+void print_exception(const std::exception &e, int level) {
+	std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';
+	try {
+		std::rethrow_if_nested(e);
+	}
+	catch (const std::exception &e) {
+		print_exception(e, level + 1);
+	}
+	catch (...) {
+	}
+}
+
+void initialize(const std::filesystem::path filePath, Simulator &sim) {
+	sim.clear();
+
+	std::ifstream file(filePath.string());
+	std::string line;
+	std::string type;
+
+	// Will be used to obtain a seed for the random number engine
+	std::random_device rd;
+
+	// Standard mersenne_twister_engine seeded with rd()
+	std::mt19937 gen(rd());
+
+	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
+		std::istringstream iss(line);
+		iss >> type;
+		try {
+			if (type.front() == '#') {
+			}
+			else if (type == "LINE") {
+				Vector2D a, b;
+				if (!(iss >> a.x >> a.y >> b.x >> b.y)) {
+					throw std::invalid_argument("Invalid 'LINE' input");
+				}
+				sim.addLine(a, b);
+			}
+			else if (type == "PARTICLE") {
+				double mass = 1, radius = 1;
+				Vector2D position, velocity;
+				if (!(iss >> mass >> radius >> position.x >> position.y)) {
+					throw std::invalid_argument("Invalid 'PARTICLE' input");
+				}
+				if (iss >> velocity.x) {
+					if (!(iss >> velocity.y)) {
+						throw std::invalid_argument("Invalid 'PARTICLE' input");
+					}
+				}
+				sim.addParticle(position, velocity, mass, radius);
+			}
+			else if (type == "BALL") {
+				double mass = 1, radius = 1, angle = 0, angularVelocity = 0;
+				Vector2D position, velocity;
+				if (!(iss >> mass >> radius >> position.x >> position.y)) {
+					throw std::invalid_argument("Invalid 'BALL' input");
+				}
+				if (iss >> velocity.x) {
+					if (!(iss >> velocity.y)) {
+						throw std::invalid_argument("Invalid 'BALL' input");
+					}
+				}
+				iss >> angle;
+				iss >> angularVelocity;
+				sim.addBall(
+					position, velocity, mass, radius, angle, angularVelocity);
+			}
+			else if (type == "GRAVITY") {
+				dataType x, y;
+				if (!(iss >> x >> y)) {
+					throw std::invalid_argument("Invalid 'GRAVITY' input");
+				}
+				sim.addForceField(ForceField(
+					[x, y](const DynamicShape &a, const ForceField &) {
+						return Vector2D(x, y) * a.mass;
+					}));
+			}
+			else if (type == "REPEAT") {
+				int repeatCount = 0;
+				std::string itemType = "";
+				if (!(iss >> repeatCount >> itemType)) {
+				}
+				if (itemType == "PARTICLE") {
+					double massMin, massMax, radMin, radMax, xMin, xMax, yMin,
+						yMax;
+					if (!(iss >> massMin >> massMax >> radMin >> radMax >>
+						  xMin >> xMax >> yMin >> yMax)) {
+						throw std::invalid_argument("Invalid 'REPEAT' input");
+					}
+					std::uniform_real_distribution<> mass(massMin, massMax);
+					std::uniform_real_distribution<> rad(radMin, radMax);
+					std::uniform_real_distribution<> x(xMin, xMax);
+					std::uniform_real_distribution<> y(yMin, yMax);
+					for (int i = 0; i < std::max(0, repeatCount); i++) {
+						sim.addParticle(
+							Vector2D(x(gen), y(gen)), Vector2D(), mass(gen),
+							rad(gen));
+					}
+				}
+			}
+			else if (type == "END") {
+				break;
+			}
+		}
+		catch (const std::exception &e) {
+			print_exception(e);
+			throw;
+		}
+	}
 }

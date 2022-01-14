@@ -1,7 +1,7 @@
 #ifndef VECTOR2D_H
 #define VECTOR2D_H
 
-#define dataType double
+#define dataType float
 #define VECTOR_SIZE 2
 
 #define _USE_MATH_DEFINES
@@ -110,17 +110,17 @@ class Vector2D {
 		return that * this->dot(that);
 	}
 
-	inline Vector2D rotate(double s, double c) const {
+	inline Vector2D rotate(dataType s, dataType c) const {
 		return {this->x * c - this->y * s, this->x * s + this->y * c};
 	}
-	inline Vector2D rotate(double angle) const {
+	inline Vector2D rotate(dataType angle) const {
 		return this->rotate(std::sin(angle), std::cos(angle));
 	}
 
 	inline auto getMagnitudeAndDirection() const {
 		const auto mag = this->len();
-		if (almost_equal(mag, 0.0))
-			return std::make_pair(0.0, Vector2D(0.0, 0.0));
+		if (almost_equal(mag, 0.0f))
+			return std::make_pair(0.0f, Vector2D(0.0f, 0.0f));
 		return std::make_pair(mag, this->operator/(mag));
 	}
 	friend std::ostream &operator<<(std::ostream &out, Vector2D const &v) {

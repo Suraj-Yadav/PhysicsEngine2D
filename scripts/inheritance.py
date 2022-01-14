@@ -95,6 +95,15 @@ if __name__ == "__main__":
         print("enum ShapeType {", file=f)
         for i in tags:
             # print(i.upper(), tags[i])
-            print(i.upper(), "=", tags[i], ",", file=f)
+            print(f"\t{i.upper()} = {bin(tags[i])},  // {tags[i]}", file=f)
         print("};", file=f)
-        print("#endif // CONSTANTS_H", file=f)
+        print("inline const char* getShapeTypeName(const ShapeType& type) {", file=f)
+        print("	switch (type) {", file=f)
+        for i in tags:
+            print(f'\t\tcase {i.upper()}:\n\t\t\treturn "{i.upper()}";', file=f)
+        # case BASESHAPE: return "BASESHAPE";
+        print("	}", file=f)
+        print('	return "";', file=f)
+        print("}", file=f)
+
+        print("#endif\t// CONSTANTS_H", file=f)

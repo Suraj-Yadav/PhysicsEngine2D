@@ -1,6 +1,7 @@
 #ifndef DRAW_UTIL_H
 #define DRAW_UTIL_H
 
+#include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/Vector2D.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Color.hpp>
@@ -8,6 +9,7 @@
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 #include <array>
+#include <filesystem>
 #include <string>
 
 class DrawUtil {
@@ -49,5 +51,7 @@ class DrawUtil {
 };
 
 void drawGrid(sf::RenderTarget &window, bool change);
+void initialize(const std::filesystem::path filePath, Simulator &sim);
+void print_exception(const std::exception &e, int level = 0);
 
-#endif  // DRAW_UTIL_H
+#endif	// DRAW_UTIL_H

@@ -7,6 +7,9 @@ case $OSTYPE in
     darwin*)
         CMAKE_GENERATOR="Unix Makefiles"
     ;;
+    msys*)
+        CMAKE_GENERATOR="MinGW Makefiles"
+    ;;
     *)
     ;;
 esac

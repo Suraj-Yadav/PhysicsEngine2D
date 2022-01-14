@@ -90,7 +90,7 @@ Slider.restitutionSlider {
 
 Label.restitutionCoeffLabel {
     AutoSize = true;
-    Position = (410, 250);
+    Position = (410, 245);
     ScrollbarPolicy = Never;
     Size = (54.2, 40);
     Text = "0.9";
@@ -182,10 +182,53 @@ Slider.frictionSlider {
 
 Label.frictionCoeffLabel {
     AutoSize = true;
-    Position = (410, 380);
+    Position = (410, 375);
     ScrollbarPolicy = Never;
     Size = (57.2, 40);
     Text = "0.9";
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textoutlinecolor = None;
+        textstyle = Bold;
+        texturebackground = None;
+    }
+}
+
+Label.gravityCoeffLabelName {
+    AutoSize = true;
+    Position = (20, 447);
+    ScrollbarPolicy = Never;
+    Size = (393.2, 40);
+    Text = "Coeff of N Body Gravity";
+    TextSize = 30;
+
+    Renderer {
+        textcolor = white;
+        textstyle = Bold;
+        texturebackground = None;
+    }
+}
+
+Slider.gravitySlider {
+    ChangeValueOnScroll = true;
+    InvertedDirection = false;
+    Maximum = 100;
+    Minimum = 0;
+    Position = (20, 500);
+    Size = (380, 32);
+    Step = 1;
+    Value = 0;
+    renderer = &1;
+}
+
+Label.gravityLabel {
+    AutoSize = true;
+    Position = (410, 495);
+    ScrollbarPolicy = Never;
+    Size = (57.2, 40);
+    Text = "0.0";
     TextSize = 30;
 
     Renderer {

@@ -16,9 +16,9 @@ std::vector<std::pair<int, int>> getCollisionBruteForce(
 
 struct Temp {
 	int index;
-	dataType left;
+	dataType val;
 
-	bool operator<(const Temp &that) { return this->left < that.left; }
+	bool operator<(const Temp &that) { return this->val < that.val; }
 };
 
 std::vector<std::pair<int, int>> getCollisionBruteForceSAT(
@@ -28,7 +28,7 @@ std::vector<std::pair<int, int>> getCollisionBruteForceSAT(
 	std::vector<Temp> sortedObj(objects.size());
 	for (size_t i = 0; i < objects.size(); i++) {
 		sortedObj[i].index = i;
-		sortedObj[i].left = objects[i].get().left;
+		sortedObj[i].val = objects[i].get().left;
 	}
 
 	std::sort(sortedObj.begin(), sortedObj.end());

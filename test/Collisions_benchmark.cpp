@@ -1,5 +1,8 @@
 #include <benchmark/benchmark.h>
 
+#include <algorithm>
+#include <random>
+
 #include "TestUtil.hpp"
 
 template <class Collision> void BM_GetCollision(benchmark::State& state) {
@@ -10,7 +13,7 @@ template <class Collision> void BM_GetCollision(benchmark::State& state) {
 		areaMultiplier;	 // This is needed so that density of particles
 						 // remain the same irrespective of number of points.
 	auto particles = getRandomParticles(
-		{-areaBounds, areaBounds, -areaBounds, areaBounds}, {1, 2}, {1, 2},
+		{-areaBounds, areaBounds, -areaBounds, areaBounds}, {0.1, 0.1}, {1, 2},
 		length);
 	std::vector<std::reference_wrapper<BaseShape>> objects(
 		particles.begin(), particles.end());

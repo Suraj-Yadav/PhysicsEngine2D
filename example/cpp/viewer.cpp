@@ -16,18 +16,6 @@
 
 #include "drawUtil.hpp"
 
-void print_exception(const std::exception &e, int level = 0) {
-	std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';
-	try {
-		std::rethrow_if_nested(e);
-	}
-	catch (const std::exception &e) {
-		print_exception(e, level + 1);
-	}
-	catch (...) {
-	}
-}
-
 Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass /
 		   (a.pos - f.pos).lenSq();
@@ -35,25 +23,21 @@ Vector2D gravity(const DynamicShape &a, const ForceField &f) {
 
 void initialize(
 	const std::filesystem::path filePath, sf::RenderWindow &window,
-	sf::RenderWindow &controllerWindow, Simulator &sim) {
-	sim.clear();
+	sf::RenderWindow &controllerWindow, tgui::Gui &gui, Simulator &sim) {
 	std::ifstream file(filePath.string());
 	std::string line;
 	std::string type;
 
-	// Will be used to obtain a seed for the random number engine
-	std::random_device rd;
-
-	// Standard mersenne_twister_engine seeded with rd()
-	std::mt19937 gen(rd());
-
 	const float scale =
 		std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
 
-	printLn(scale);
-	controllerWindow.setSize({unsigned(800 * scale), unsigned(600 * scale)});
+	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
 	controllerWindow.setPosition({200, 200});
+	controllerWindow.setView(sf::View({0, 0, 600, 600}));
+	gui.setView(controllerWindow.getView());
+
 	window.setPosition({static_cast<int>(200 + 300 * scale), 200});
+
 	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
 		std::istringstream iss(line);
 		iss >> type;
@@ -74,86 +58,13 @@ void initialize(
 			}
 			else if (type == "TITLE") {
 				std::string title;
-				if (!(iss >> title)) {
+				if (!(std::getline(iss, title))) {
 					throw std::invalid_argument("Invalid 'TITLE' input");
 				}
 				window.setTitle(title);
 			}
-			else if (type == "LINE") {
-				Vector2D a, b;
-				if (!(iss >> a.x >> a.y >> b.x >> b.y)) {
-					throw std::invalid_argument("Invalid 'LINE' input");
-				}
-				sim.addObject(new Line(a, b));
-			}
-			else if (type == "PARTICLE") {
-				double mass = 1, radius = 1;
-				Vector2D position, velocity;
-				if (!(iss >> mass >> radius >> position.x >> position.y)) {
-					throw std::invalid_argument("Invalid 'PARTICLE' input");
-				}
-				if (iss >> velocity.x) {
-					if (!(iss >> velocity.y)) {
-						throw std::invalid_argument("Invalid 'PARTICLE' input");
-					}
-				}
-
-				sim.addObject(new Particle(position, velocity, mass, radius));
-			}
-			else if (type == "BALL") {
-				double mass = 1, radius = 1, angle = 0, angularVelocity = 0;
-				Vector2D position, velocity;
-				if (!(iss >> mass >> radius >> position.x >> position.y)) {
-					throw std::invalid_argument("Invalid 'BALL' input");
-				}
-				if (iss >> velocity.x) {
-					if (!(iss >> velocity.y)) {
-						throw std::invalid_argument("Invalid 'BALL' input");
-					}
-				}
-				iss >> angle;
-				iss >> angularVelocity;
-
-				sim.addObject(new Ball(
-					position, velocity, mass, radius, angle, angularVelocity));
-			}
-			else if (type == "GRAVITY") {
-				dataType x, y;
-				if (!(iss >> x >> y)) {
-					throw std::invalid_argument("Invalid 'GRAVITY' input");
-				}
-				sim.addForceField(ForceField(
-					[x, y](const DynamicShape &a, const ForceField &f) {
-						return Vector2D(x, y) * a.mass;
-					}));
-			}
-			else if (type == "REPEAT") {
-				int repeatCount = 0;
-				std::string itemType = "";
-				if (!(iss >> repeatCount >> itemType)) {
-				}
-				if (itemType == "PARTICLE") {
-					double massMin, massMax, radMin, radMax, xMin, xMax, yMin,
-						yMax;
-					if (!(iss >> massMin >> massMax >> radMin >> radMax >>
-						  xMin >> xMax >> yMin >> yMax)) {
-						throw std::invalid_argument("Invalid 'REPEAT' input");
-					}
-					std::uniform_real_distribution<> mass(massMin, massMax);
-					std::uniform_real_distribution<> rad(radMin, radMax);
-					std::uniform_real_distribution<> x(xMin, xMax);
-					std::uniform_real_distribution<> y(yMin, yMax);
-					for (int i = 0; i < std::max(0, repeatCount); i++) {
-						sim.addObject(new Particle(
-							{x(gen), y(gen)}, {0, 0}, mass(gen), rad(gen)));
-					}
-				}
-			}
 			else if (type == "END") {
-				return;
-			}
-			else {
-				throw std::invalid_argument("Unknown type '" + type + "'");
+				break;
 			}
 		}
 		catch (const std::exception &e) {
@@ -161,6 +72,7 @@ void initialize(
 			throw;
 		}
 	}
+	initialize(filePath, sim);
 }
 
 int main(int argc, char **argv) {
@@ -181,14 +93,16 @@ int main(int argc, char **argv) {
 	Simulator sim(10, 0.9f, 0.9f);
 
 	sf::RenderWindow controllerWindow(
-		sf::VideoMode(300, 300), "Controls", sf::Style::Close,
+		sf::VideoMode(400, 400), "Controls", sf::Style::Close,
 		sf::ContextSettings(0, 0, 8));
+
 	sf::RenderWindow window(
 		sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close,
 		sf::ContextSettings(0, 0, 8));
+
 	tgui::Gui gui(controllerWindow);
 
-	initialize(initFilePath, window, controllerWindow, sim);
+	initialize(initFilePath, window, controllerWindow, gui, sim);
 
 	DrawUtil drawUtil(window, "2Dumb");
 
@@ -202,6 +116,8 @@ int main(int argc, char **argv) {
 	auto restitutionCoeffLabel = gui.get<tgui::Label>("restitutionCoeffLabel");
 	auto frictionSlider = gui.get<tgui::Slider>("frictionSlider");
 	auto frictionCoeffLabel = gui.get<tgui::Label>("frictionCoeffLabel");
+	auto gravitySlider = gui.get<tgui::Slider>("gravitySlider");
+	auto gravityLabel = gui.get<tgui::Label>("gravityLabel");
 	auto timeLabel = gui.get<tgui::Label>("timeLabel");
 
 	checkbox->setChecked(showBox);
@@ -224,11 +140,18 @@ int main(int argc, char **argv) {
 				std::to_string(sim.frictionCoeff = value / 100.0f));
 		});
 
+	gravitySlider->setValue(sim.nBodyGravity * 100.0f);
+	gravityLabel->setText(std::to_string(sim.nBodyGravity));
+	gravitySlider->connect("ValueChanged", [&gravityLabel, &sim](float value) {
+		gravityLabel->setText(
+			std::to_string(sim.nBodyGravity = value / 100.0f));
+	});
+
 	double time = 0;
 	bool pauseSimulation = true;
 
 	resetButton->connect("pressed", [&]() {
-		initialize(initFilePath, window, controllerWindow, sim);
+		initialize(initFilePath, window, controllerWindow, gui, sim);
 		time = 0;
 	});
 
@@ -246,61 +169,37 @@ int main(int argc, char **argv) {
 					controllerWindow.close();
 					break;
 				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape) {
-						window.close();
-						controllerWindow.close();
-					}
-					else if (event.key.code == sf::Keyboard::A) {
-						auto pos = window.mapPixelToCoords(
-							sf::Mouse::getPosition(window));
-						sim.addObject(
-							new Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
-					}
-					else if (event.key.code == sf::Keyboard::Space) {
-						pauseSimulation = !pauseSimulation;
-					}
-					else if (event.key.code == sf::Keyboard::R) {
-						initialize(initFilePath, window, controllerWindow, sim);
-						time = 0;
-					}
-					else if (event.key.code == sf::Keyboard::P) {
-						for (const auto &object : sim.objects) {
-							switch (object->getClass()) {
-								case BASESHAPE:
-									break;
-								case DYNAMICSHAPE:
-									break;
-								case RIGIDSHAPE:
-									break;
-								case LINE: {
-									auto obj =
-										static_cast<Line *>(object.get());
-									printLn(
-										"LINE", obj->start.x, obj->start.y,
-										obj->start.x, obj->end.y);
-									break;
-								}
-								case PARTICLE: {
-									auto obj =
-										static_cast<Particle *>(object.get());
-									printLn("PARTICLE", obj->pos.x, obj->pos.y);
-									break;
-								}
-								case BALL: {
-									// auto obj = static_cast<Ball
-									// *>(object.get());
-									break;
-								}
-								case BOX: {
-									// auto obj = static_cast<Box
-									// *>(object.get());
-									break;
-								}
-							}
+					switch (event.key.code) {
+						case sf::Keyboard::Escape:
+							window.close(), controllerWindow.close();
+							break;
+						case sf::Keyboard::A: {
+							auto pos = window.mapPixelToCoords(
+								sf::Mouse::getPosition(window));
+							sim.addParticle(
+								Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
+							break;
 						}
+						case sf::Keyboard::Space:
+							pauseSimulation = !pauseSimulation;
+							break;
+						case sf::Keyboard::R:
+							initialize(
+								initFilePath, window, controllerWindow, gui,
+								sim);
+							time = 0;
+							break;
+						case sf::Keyboard::P:
+							for (const auto &elem : sim.getLines()) {
+								printLn("LINE", elem.start, elem.end);
+							}
+							for (const auto &elem : sim.getParticles()) {
+								printLn("PARTICLE", elem.pos);
+							}
+							break;
+						default:
+							break;
 					}
-
-					break;
 				}
 				default:
 					break;
@@ -328,12 +227,8 @@ int main(int argc, char **argv) {
 		if (!pauseSimulation) {
 			auto timeLapse = std::min(FPSClock.restart(), sf::seconds(0.1));
 			time += timeLapse.asSeconds();
-			sim.simulate(timeLapse.asSeconds(), 1);
+			sim.simulate(timeLapse.asSeconds());
 			timeLabel->setText("Time: " + std::to_string(time) + " s");
-			break;
-			// if (time >= 20) {
-			// 	break;
-			// }
 		}
 
 		window.clear();
@@ -349,77 +244,50 @@ int main(int argc, char **argv) {
 				 Vector2D(right, bottom), Vector2D(left, bottom)},
 				sf::Color::Red, 5);
 		}
-		for (const auto &object : sim.objects) {
-			switch (object->getClass()) {
-				case BASESHAPE:
-					break;
-				case DYNAMICSHAPE:
-					break;
-				case RIGIDSHAPE:
-					break;
-				case LINE: {
-					auto obj = static_cast<Line *>(object.get());
-					drawUtil.line(obj->start, obj->end, sf::Color::Green);
-					drawUtil.line(
-						0.5 * obj->start + 0.5 * obj->end,
-						0.5 * obj->start + 0.5 * obj->end + obj->normal,
-						sf::Color::Magenta);
-					break;
-				}
-				case PARTICLE: {
-					auto obj = static_cast<Particle *>(object.get());
-					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
-					if (showBox) {
-						drawUtil.line(
-							obj->pos, obj->pos + obj->vel, sf::Color::White);
-					}
-					break;
-				}
-				case BALL: {
-					const auto obj = static_cast<Ball *>(object.get());
-					drawUtil.drawCircle(obj->pos, obj->rad, sf::Color::Blue);
-					auto radiusVec =
-						Vector2D(std::cos(obj->angle), std::sin(obj->angle));
-					drawUtil.line(
-						obj->pos, obj->pos + obj->rad * radiusVec,
-						sf::Color::Yellow);
-					drawUtil.line(
-						obj->pos + radiusVec,
-						obj->pos + obj->rad * radiusVec +
-							obj->angVel * radiusVec.rotate(1, 0),
-						sf::Color::Yellow);
-					if (!pauseSimulation) {
-						auto KE = 0.5 * obj->mass * obj->vel.lenSq(),
-							 PE = 9.8 * obj->mass * obj->pos.y;
-						// printLn(time, ',', KE, ',', PE, ',', KE + PE);
-						// 	std::cout << time << ',' << obj->pos.x << ',' <<
-						// obj->pos.y << ',' << obj->vel.x << ',' << obj->vel.y
-						// << '\n';
-					}
-
-					break;
-				}
-				case BOX: {
-					auto obj = static_cast<Box *>(object.get());
-					drawUtil.quad(obj->corner, sf::Color::Blue);
-					break;
-				}
-			}
+		for (auto &elem : sim.getBaseShapes()) {
 			if (showBox)
 				drawUtil.quad(
-					{Vector2D(object->left, object->top),
-					 Vector2D(object->right, object->top),
-					 Vector2D(object->right, object->bottom),
-					 Vector2D(object->left, object->bottom)},
+					{Vector2D(elem.get().left, elem.get().top),
+					 Vector2D(elem.get().right, elem.get().top),
+					 Vector2D(elem.get().right, elem.get().bottom),
+					 Vector2D(elem.get().left, elem.get().bottom)},
 					sf::Color::Red);
 		}
+
+		for (auto &line : sim.getLines()) {
+			drawUtil.line(line.start, line.end, sf::Color::Green);
+			if (showBox) {
+				drawUtil.line(
+					0.5 * line.start + 0.5 * line.end,
+					0.5 * line.start + 0.5 * line.end + line.normal,
+					sf::Color::Green);
+			}
+		}
+		for (auto &particle : sim.getParticles()) {
+			drawUtil.drawCircle(particle.pos, particle.rad, sf::Color::Blue);
+			if (showBox) {
+				drawUtil.line(
+					particle.pos, particle.pos + particle.vel,
+					sf::Color::White);
+			}
+		}
+		for (auto &ball : sim.getBalls()) {
+			drawUtil.drawCircle(ball.pos, ball.rad, sf::Color::Blue);
+			auto radiusVec =
+				Vector2D(std::cos(ball.angle), std::sin(ball.angle));
+			drawUtil.line(
+				ball.pos, ball.pos + ball.rad * radiusVec, sf::Color::Yellow);
+			drawUtil.line(
+				ball.pos + radiusVec,
+				ball.pos + ball.rad * radiusVec +
+					ball.angVel * radiusVec.rotate(1, 0),
+				sf::Color::Yellow);
+		}
+
 		drawUtil.finally();
 		gui.draw();
 		window.display();
 		controllerWindow.display();
-		// if (time >= 10.0) {
-		// 	break;
-		// }
 	}
 #ifdef __APPLE__
 	ProfilerStop();

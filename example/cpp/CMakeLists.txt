@@ -53,15 +53,12 @@ macro(add_example target)
 
   # Copy resource files to build directory
   foreach(RESOURCE_FILE ${EXAMPLE_RESOURCES})
+    message(${RESOURCE_FILE})
     file(COPY ${RESOURCE_FILE} DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
   endforeach()
 endmacro()
 
-# add_example(viewer SOURCES viewer.cpp RESOURCES controller.form)
-
-# add_example(benchmark SOURCES benchmark.cpp RESOURCES )
-
-add_example(temp SOURCES temp.cpp RESOURCES)
+add_example(viewer SOURCES viewer.cpp RESOURCES controller.form)
 
 # add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SRC}) add_custom_command(
 # TARGET ${PROJECT_NAME} POST_BUILD COMMAND plutil -replace

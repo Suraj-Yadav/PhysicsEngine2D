@@ -7,6 +7,7 @@
 #include "Constants.hpp"
 #include "Vector2D.hpp"
 
+std::ostream &operator<<(std::ostream &out, const ShapeType &type);
 class BaseShape {
    protected:
 	inline void setBounds(
@@ -32,7 +33,7 @@ class BaseShape {
 		return out << "BaseShape"
 				   << "[]";
 	}
-	double top, left, right, bottom;
+	dataType top, left, right, bottom;
 };
 
 class DynamicShape : public BaseShape {
@@ -86,7 +87,7 @@ class Particle final : public DynamicShape {
 				   << static_cast<const DynamicShape &>(b) << "]";
 	}
 
-	void debugDraw(std::ostream &out, std::string label) {
+	void debugDraw(std::ostream &out, std::string label) const {
 		// writeF(
 		// 	out, "draw(circle(%, %), blue,
 		// L=Label(\"%\",overwrite(Move)));\n", 	pos, rad, label);
@@ -199,7 +200,10 @@ class Box final : public RigidShape {
 class Line final : public BaseShape {
    public:
 	Line(const Vector2D &a, const Vector2D &b)
-		: start(a), end(b), normal((b - a).rotate(1, 0).unit()) {
+		: start(a),
+		  end(b),
+		  normal((b - a).rotate(1, 0).unit()),
+		  length((b - a).len()) {
 		const double padding = std::max(0.05, 0.01 * (a - b).len());
 		setBounds(
 			std::min(start.x, end.x) - padding,
@@ -217,7 +221,7 @@ class Line final : public BaseShape {
 				   << "]";
 	}
 
-	void debugDraw(std::ostream &out, std::string label) {
+	void debugDraw(std::ostream &out, std::string label) const {
 		// writeF(
 		// 	out, "draw( % -- %, L=Label(\"%\",overwrite(Move)));\n", start,
 		// end, 	label);
@@ -226,12 +230,14 @@ class Line final : public BaseShape {
 	Vector2D start;
 	Vector2D end;
 	Vector2D normal;
+	dataType length;
 };
 
-inline bool isTypeof(int a, int b) {
-	if (a == 0 || b == 0) return false;
-	while (a < b) b >>= 4;
-	return a == b;
+inline bool isTypeof(ShapeType a, ShapeType b) {
+	int a1 = a, b1 = b;
+	if (a1 == 0 || b1 == 0) return false;
+	while (a1 < b1) b1 >>= 4;
+	return a1 == b1;
 }
 
 #endif	// SHAPE_H
