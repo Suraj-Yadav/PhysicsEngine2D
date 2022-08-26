@@ -2,10 +2,10 @@
 #include <PhysicsEngine2D/IntervalTree.hpp>
 
 std::vector<std::pair<int, int>> getCollisionBruteForce(
-	const std::vector<std::reference_wrapper<BaseShape>> &objects) {
+	const std::vector<std::reference_wrapper<BaseShape>>& objects) {
 	std::vector<std::pair<int, int>> collisions;
 	for (size_t i = 0; i < objects.size(); i++) {
-		for (int j = i + 1; j < objects.size(); ++j) {
+		for (size_t j = i + 1; j < objects.size(); ++j) {
 			if (objects[i].get().intersects(objects[j])) {
 				collisions.emplace_back(i, j);
 			}
@@ -18,11 +18,13 @@ struct Temp {
 	int index;
 	dataType val;
 
-	bool operator<(const Temp &that) { return this->val < that.val; }
+	bool operator<(const Temp& that) {
+		return comparePair(this->val, that.val, this->index < that.index);
+	}
 };
 
 std::vector<std::pair<int, int>> getCollisionBruteForceSAT(
-	const std::vector<std::reference_wrapper<BaseShape>> &objects) {
+	const std::vector<std::reference_wrapper<BaseShape>>& objects) {
 	std::vector<std::pair<int, int>> collisions;
 
 	std::vector<Temp> sortedObj(objects.size());
@@ -34,9 +36,9 @@ std::vector<std::pair<int, int>> getCollisionBruteForceSAT(
 	std::sort(sortedObj.begin(), sortedObj.end());
 
 	for (size_t i = 0; i < sortedObj.size(); i++) {
-		auto &firstObj = objects[sortedObj[i].index].get();
-		for (int j = i + 1; j < sortedObj.size(); ++j) {
-			auto &secondObj = objects[sortedObj[j].index].get();
+		auto& firstObj = objects[sortedObj[i].index].get();
+		for (size_t j = i + 1; j < sortedObj.size(); ++j) {
+			auto& secondObj = objects[sortedObj[j].index].get();
 			if (firstObj.intersects(secondObj)) {
 				collisions.emplace_back(
 					std::minmax(sortedObj[i].index, sortedObj[j].index));
@@ -58,13 +60,13 @@ struct Event {
 	int index;
 };
 
-inline bool operator<(const Event &a, const Event &b) {
+inline bool operator<(const Event& a, const Event& b) {
 	return a.xCoord < b.xCoord ||
 		   (a.xCoord == b.xCoord && a.isStart < b.isStart);
 }
 
 std::vector<std::pair<int, int>> getCollisionIntervalTree(
-	const std::vector<std::reference_wrapper<BaseShape>> &objects) {
+	const std::vector<std::reference_wrapper<BaseShape>>& objects) {
 	std::vector<std::pair<int, int>> collisions;
 	AVL<double, int> st;
 	std::vector<Event> xEvents;
@@ -83,12 +85,12 @@ std::vector<std::pair<int, int>> getCollisionIntervalTree(
 
 	std::sort(xEvents.begin(), xEvents.end());
 
-	for (auto &event : xEvents) {
+	for (auto& event : xEvents) {
 		if (event.isStart) {
 			auto list = st.searchAll(
 				objects[event.index].get().bottom,
 				objects[event.index].get().top);
-			for (auto &j : list) {
+			for (auto& j : list) {
 				if (objects[event.index].get().intersects(objects[j]) &&
 					(objects[event.index].get().getClass() != LINE ||
 					 objects[j].get().getClass() != LINE)) {

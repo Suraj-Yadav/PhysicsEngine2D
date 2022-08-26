@@ -50,8 +50,8 @@ namespace fontManager {
 			  monospace(false) {}
 
 		FontDescriptor(
-			const char *path, const char *postscriptName, const char *family,
-			const char *style, FontWeight weight, FontWidth width, bool italic,
+			const char* path, const char* postscriptName, const char* family,
+			const char* style, FontWeight weight, FontWidth width, bool italic,
 			bool monospace)
 			: path(path),
 			  postscriptName(postscriptName),
@@ -63,12 +63,12 @@ namespace fontManager {
 			  monospace(monospace) {}
 	};
 	std::vector<FontDescriptor> getAllFonts();
-	FontDescriptor findFont(const FontDescriptor &desc);
-	inline FontDescriptor findFont(const std::string &fontFamily) {
+	FontDescriptor findFont(const FontDescriptor& desc);
+	inline FontDescriptor findFont(const std::string& fontFamily) {
 		FontDescriptor desc = FontDescriptor();
 		desc.family = fontFamily;
 		return findFont(desc);
 	}
 }  // namespace fontManager
 
-#endif  // FONT_MANAGER_H
+#endif	// FONT_MANAGER_H

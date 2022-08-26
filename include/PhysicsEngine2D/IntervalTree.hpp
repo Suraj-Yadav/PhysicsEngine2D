@@ -28,11 +28,11 @@ template <class KeyType, class ValueType> class AVL {
 		int height, balance;
 		int left, right;
 		ValueType value;
-		inline Node(const Range<KeyType> &range, ValueType val) : range(range) {
+		inline Node(const Range<KeyType>& range, ValueType val) : range(range) {
 			init(range, val);
 		}
 
-		inline void init(const Range<KeyType> &range, ValueType val) {
+		inline void init(const Range<KeyType>& range, ValueType val) {
 			this->range = range;
 			maxEnd = range.end;
 			height = 0;
@@ -42,7 +42,7 @@ template <class KeyType, class ValueType> class AVL {
 			value = val;
 		}
 
-		friend std::ostream &operator<<(std::ostream &out, Node const &b) {
+		friend std::ostream& operator<<(std::ostream& out, Node const& b) {
 			return out << "Node ["
 					   << "range:" << b.range << ","
 					   << "value:" << b.value << "]";
@@ -52,7 +52,7 @@ template <class KeyType, class ValueType> class AVL {
 	std::vector<Node> nodes;
 	std::vector<int> freeMemorySlots;
 
-	int newNode(const Range<KeyType> &range, ValueType val) {
+	int newNode(const Range<KeyType>& range, ValueType val) {
 		if (freeMemorySlots.size() == 0) {
 			const int newSlot = nodes.size();
 			nodes.emplace_back(range, val);
@@ -96,7 +96,7 @@ template <class KeyType, class ValueType> class AVL {
 			nodes[x].maxEnd =
 				std::max(nodes[nodes[x].right].maxEnd, nodes[x].maxEnd);
 	}
-	int insert(int x, const Range<KeyType> &range, const ValueType &value) {
+	int insert(int x, const Range<KeyType>& range, const ValueType& value) {
 		if (x == NULL_NODE) return newNode(range, value);
 		if (comparePair(range, nodes[x].range, value < nodes[x].value))
 			nodes[x].left = insert(nodes[x].left, range, value);
@@ -135,7 +135,7 @@ template <class KeyType, class ValueType> class AVL {
 		}
 		return x;
 	}
-	int remove(int x, const Range<KeyType> &range, const ValueType &value) {
+	int remove(int x, const Range<KeyType>& range, const ValueType& value) {
 		// printLn(debug(x), debug(range), debug(value));
 		if (x == NULL_NODE) return NULL_NODE;
 		if (comparePair(range, nodes[x].range, value < nodes[x].value))
@@ -165,7 +165,7 @@ template <class KeyType, class ValueType> class AVL {
 		if (nodes[x].balance < -1 || nodes[x].balance > 1) x = rebalance(x);
 		return x;
 	}
-	void inOrder(int x, std::list<ValueType> &list) {
+	void inOrder(int x, std::list<ValueType>& list) {
 		if (x == NULL_NODE) return;
 		inOrder(nodes[x].left, list);
 		// print(x->value);
@@ -207,7 +207,7 @@ template <class KeyType, class ValueType> class AVL {
 		return true;
 	}
 	bool searchAll(
-		int x, KeyType low, KeyType high, std::vector<ValueType> &list) {
+		int x, KeyType low, KeyType high, std::vector<ValueType>& list) {
 		bool found1 = false;
 		bool found2 = false;
 		bool found3 = false;

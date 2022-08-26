@@ -1,57 +1,52 @@
 #ifndef DRAW_UTIL_H
 #define DRAW_UTIL_H
 
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/Vector2D.hpp>
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/VertexArray.hpp>
 #include <array>
 #include <filesystem>
 #include <string>
 
-class DrawUtil {
-	sf::RenderTarget &window;
-	sf::VertexArray quads, lines;
-	sf::Font font;
-	sf::Text text;
-	sf::CircleShape circle;
+struct ViewPort {
+	ImVec2 windowSize;
+	Vector2D position;
+	ImVec2 scale;
 
    public:
-	DrawUtil(sf::RenderTarget &window, const std::string &fontName);
-	~DrawUtil();
-
-	void line(
-		const Vector2D &a, const Vector2D &b, const sf::Color &c1,
-		const sf::Color &c2, int width = 0);
-	void drawCircle(const Vector2D &cen, double rad, const sf::Color &c);
-	void drawText(
-		std::string str, const Vector2D &pos, int size, const sf::Color &c);
-	void quad(
-		const std::array<Vector2D, 4> &points, const sf::Color &col,
-		int width = 0) {
-		line(points[0], points[1], col, col, width);
-		line(points[1], points[2], col, col, width);
-		line(points[2], points[3], col, col, width);
-		line(points[3], points[0], col, col, width);
-	}
-	void line(
-		const Vector2D &a, const Vector2D &b, const sf::Color &c,
-		int width = 0) {
-		line(a, b, c, c, width);
-	}
-	void finally() {
-		window.draw(lines);
-		window.draw(quads);
-		lines.clear();
-		quads.clear();
-	}
+	ImVec2 abs(Vector2D);
+	Vector2D rel(const ImVec2&);
+	dataType abs(dataType);
+	dataType rel(dataType);
 };
 
-void drawGrid(sf::RenderTarget &window, bool change);
-void initialize(const std::filesystem::path filePath, Simulator &sim);
-void print_exception(const std::exception &e, int level = 0);
+void print_exception(const std::exception& e, int level = 0);
+
+using Color = ImColor;
+
+class DrawUtil {
+   public:
+	ViewPort view;
+	GLFWwindow* window;
+	std::string title;
+
+	DrawUtil(const std::filesystem::path filePath, Simulator& sim);
+	~DrawUtil();
+
+	void drawCircle(
+		ImDrawList* draw_list, const Vector2D& cen, double rad, const Color& c);
+	void drawText(
+		ImDrawList* draw_list, std::string str, const Vector2D& pos, int size,
+		const Color& c);
+	void rect(
+		ImDrawList* draw_list, const Vector2D& a, const Vector2D& b,
+		const Color& col, int width = 1);
+	void line(
+		ImDrawList* draw_list, const Vector2D& a, const Vector2D& b,
+		const Color& c, int width = 1);
+	void finally(GLFWwindow* window);
+};
 
 #endif	// DRAW_UTIL_H

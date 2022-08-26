@@ -17,23 +17,23 @@
 	if (FAILED(hr)) throw "Font loading error";
 
 // SafeRelease inline function.
-template <class T> inline void SafeRelease(T **ppT) {
+template <class T> inline void SafeRelease(T** ppT) {
 	if (*ppT) {
 		(*ppT)->Release();
 		*ppT = nullptr;
 	}
 }
 
-char *utf16ToUtf8(const WCHAR *input) {
+char* utf16ToUtf8(const WCHAR* input) {
 	unsigned int len =
 		WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
-	char *output = new char[len];
+	char* output = new char[len];
 	WideCharToMultiByte(CP_UTF8, 0, input, -1, output, len, NULL, NULL);
 	return output;
 }
 
 // returns the index of the user's locale in the set of localized strings
-unsigned int getLocaleIndex(IDWriteLocalizedStrings *strings) {
+unsigned int getLocaleIndex(IDWriteLocalizedStrings* strings) {
 	unsigned int index = 0;
 	BOOL exists = false;
 	wchar_t localeName[LOCALE_NAME_MAX_LENGTH];
@@ -57,9 +57,9 @@ unsigned int getLocaleIndex(IDWriteLocalizedStrings *strings) {
 	return index;
 }
 
-char *getString(IDWriteFont *font, DWRITE_INFORMATIONAL_STRING_ID string_id) {
-	char *res = NULL;
-	IDWriteLocalizedStrings *strings = NULL;
+char* getString(IDWriteFont* font, DWRITE_INFORMATIONAL_STRING_ID string_id) {
+	char* res = NULL;
+	IDWriteLocalizedStrings* strings = NULL;
 
 	BOOL exists = false;
 	HR(font->GetInformationalStrings(string_id, &strings, &exists));
@@ -67,7 +67,7 @@ char *getString(IDWriteFont *font, DWRITE_INFORMATIONAL_STRING_ID string_id) {
 	if (exists) {
 		unsigned int index = getLocaleIndex(strings);
 		unsigned int len = 0;
-		WCHAR *str = NULL;
+		WCHAR* str = NULL;
 
 		HR(strings->GetStringLength(index, &len));
 		str = new WCHAR[len + 1];
@@ -90,23 +90,23 @@ char *getString(IDWriteFont *font, DWRITE_INFORMATIONAL_STRING_ID string_id) {
 }
 
 void resultFromFont(
-	IDWriteFont *font, std::vector<fontManager::FontDescriptor> &fonts) {
-	IDWriteFontFace *face = nullptr;
+	IDWriteFont* font, std::vector<fontManager::FontDescriptor>& fonts) {
+	IDWriteFontFace* face = nullptr;
 	unsigned int numFiles = 0;
 
 	HR(font->CreateFontFace(&face));
 
 	// get the font files from this font face
-	IDWriteFontFile *files = nullptr;
+	IDWriteFontFile* files = nullptr;
 	HR(face->GetFiles(&numFiles, nullptr));
 	HR(face->GetFiles(&numFiles, &files));
 
 	for (unsigned i = 0; i < numFiles; ++i) {
-		IDWriteFontFileLoader *loader = nullptr;
-		IDWriteLocalFontFileLoader *fileLoader = nullptr;
+		IDWriteFontFileLoader* loader = nullptr;
+		IDWriteLocalFontFileLoader* fileLoader = nullptr;
 
 		unsigned int nameLength = 0;
-		const void *referenceKey = nullptr;
+		const void* referenceKey = nullptr;
 		unsigned int referenceKeySize = 0;
 		WCHAR name[MAX_BUFFER_SIZE];
 
@@ -114,7 +114,7 @@ void resultFromFont(
 
 		// check if this is a local font file
 		HRESULT hr = loader->QueryInterface(
-			__uuidof(IDWriteLocalFontFileLoader), (void **)&fileLoader);
+			__uuidof(IDWriteLocalFontFileLoader), (void**)&fileLoader);
 
 		if (SUCCEEDED(hr)) {
 			// get the file path
@@ -126,20 +126,20 @@ void resultFromFont(
 			HR(fileLoader->GetFilePathFromKey(
 				referenceKey, referenceKeySize, name, nameLength + 1));
 
-			char *psName = utf16ToUtf8(name);
-			char *postscriptName =
+			char* psName = utf16ToUtf8(name);
+			char* postscriptName =
 				getString(font, DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME);
-			char *family =
+			char* family =
 				getString(font, DWRITE_INFORMATIONAL_STRING_WIN32_FAMILY_NAMES);
-			char *style = getString(
+			char* style = getString(
 				font, DWRITE_INFORMATIONAL_STRING_WIN32_SUBFAMILY_NAMES);
 			bool monospace = false;
 			// this method requires windows 7, so we need to cast to an
 			// IDWriteFontFace1
 
-			IDWriteFontFace1 *face1;
+			IDWriteFontFace1* face1;
 			HRESULT hr = face->QueryInterface(
-				__uuidof(IDWriteFontFace1), (void **)&face1);
+				__uuidof(IDWriteFontFace1), (void**)&face1);
 			if (SUCCEEDED(hr)) {
 				monospace = face1->IsMonospacedFont() == TRUE;
 			}
@@ -162,21 +162,21 @@ void resultFromFont(
 std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 	std::vector<fontManager::FontDescriptor> fonts;
 
-	IDWriteFactory *factory = nullptr;
+	IDWriteFactory* factory = nullptr;
 
 	HR(DWriteCreateFactory(
 		DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-		reinterpret_cast<IUnknown **>(&factory)));
+		reinterpret_cast<IUnknown**>(&factory)));
 
 	// Get the system font collection.
-	IDWriteFontCollection *collection = nullptr;
+	IDWriteFontCollection* collection = nullptr;
 	HR(factory->GetSystemFontCollection(&collection));
 
 	// Get the number of font families in the collection.
 	const size_t familyCount = collection->GetFontFamilyCount();
 
 	for (size_t i = 0; i < familyCount; ++i) {
-		IDWriteFontFamily *family = nullptr;
+		IDWriteFontFamily* family = nullptr;
 
 		// Get the font family.
 		HR(collection->GetFontFamily(i, &family));
@@ -184,7 +184,7 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 		const size_t fontCount = family->GetFontCount();
 
 		for (size_t j = 0; j < fontCount; ++j) {
-			IDWriteFont *font = nullptr;
+			IDWriteFont* font = nullptr;
 
 			// Get the Font Data
 			HR(family->GetFont(j, &font));
@@ -257,7 +257,7 @@ fontManager::FontWidth convertWidth(int width) {
 	}
 }
 
-fontManager::FontDescriptor createFontDescriptor(FcPattern *pattern) {
+fontManager::FontDescriptor createFontDescriptor(FcPattern* pattern) {
 	FcChar8 *path, *psName, *family, *style;
 	int weight, width, slant, spacing;
 
@@ -272,7 +272,7 @@ fontManager::FontDescriptor createFontDescriptor(FcPattern *pattern) {
 	FcPatternGetInteger(pattern, FC_SPACING, 0, &spacing);
 
 	return fontManager::FontDescriptor(
-		(char *)path, (char *)psName, (char *)family, (char *)style,
+		(char*)path, (char*)psName, (char*)family, (char*)style,
 		convertWeight(weight), convertWidth(width), slant == FC_SLANT_ITALIC,
 		spacing == FC_MONO);
 }
@@ -282,12 +282,12 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 
 	FcInit();
 
-	FcPattern *pattern = FcPatternCreate();
-	FcObjectSet *os = FcObjectSetBuild(
+	FcPattern* pattern = FcPatternCreate();
+	FcObjectSet* os = FcObjectSetBuild(
 		FC_FILE, FC_POSTSCRIPT_NAME, FC_FAMILY, FC_STYLE, FC_WEIGHT, FC_WIDTH,
 		FC_SLANT, FC_SPACING, NULL);
 
-	FcFontSet *fs = FcFontList(NULL, pattern, os);
+	FcFontSet* fs = FcFontList(NULL, pattern, os);
 	if (fs == NULL) {
 		return fonts;
 	}
@@ -307,8 +307,8 @@ std::vector<fontManager::FontDescriptor> fontManager::getAllFonts() {
 #endif
 
 auto fontMatches(
-	const fontManager::FontDescriptor &result,
-	const fontManager::FontDescriptor &description) {
+	const fontManager::FontDescriptor& result,
+	const fontManager::FontDescriptor& description) {
 #define OPT_EQUAL_UTIL(value, desc, property, defaultValue) \
 	(desc.property == defaultValue || desc.property == value.property)
 
@@ -329,11 +329,11 @@ auto fontMatches(
 }
 
 fontManager::FontDescriptor fontManager::findFont(
-	const fontManager::FontDescriptor &desc) {
+	const fontManager::FontDescriptor& desc) {
 	auto allFonts = getAllFonts();
 	auto result = std::find_if(
 		allFonts.begin(), allFonts.end(),
-		[&desc](const auto &res) { return fontMatches(res, desc); });
+		[&desc](const auto& res) { return fontMatches(res, desc); });
 	if (result != allFonts.end()) {
 		return *result;
 	}

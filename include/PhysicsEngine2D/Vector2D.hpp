@@ -1,7 +1,7 @@
 #ifndef VECTOR2D_H
 #define VECTOR2D_H
 
-#define dataType float
+#define dataType	float
 #define VECTOR_SIZE 2
 
 #define _USE_MATH_DEFINES
@@ -37,55 +37,55 @@ class Vector2D {
 		return y;
 	}
 
-	inline Vector2D &operator+=(const Vector2D &that) {
+	inline Vector2D& operator+=(const Vector2D& that) {
 		this->x += that.x;
 		this->y += that.y;
 		return *this;
 	}
 
-	inline Vector2D &operator-=(const Vector2D &that) {
+	inline Vector2D& operator-=(const Vector2D& that) {
 		this->x -= that.x;
 		this->y -= that.y;
 		return *this;
 	}
 
-	inline Vector2D &operator*=(const dataType &factor) {
+	inline Vector2D& operator*=(const dataType& factor) {
 		this->x *= factor;
 		this->y *= factor;
 		return *this;
 	}
-	inline Vector2D &operator/=(const dataType &factor) {
+	inline Vector2D& operator/=(const dataType& factor) {
 		this->x /= factor;
 		this->y /= factor;
 		return *this;
 	}
 
-	inline Vector2D operator+(const Vector2D &that) const {
+	inline Vector2D operator+(const Vector2D& that) const {
 		return {this->x + that.x, this->y + that.y};
 	}
-	inline Vector2D operator-(const Vector2D &that) const {
+	inline Vector2D operator-(const Vector2D& that) const {
 		return {this->x - that.x, this->y - that.y};
 	}
 
-	inline Vector2D operator*(const dataType &factor) const {
+	inline Vector2D operator*(const dataType& factor) const {
 		return {this->x * factor, this->y * factor};
 	}
-	inline Vector2D operator/(const dataType &factor) const {
+	inline Vector2D operator/(const dataType& factor) const {
 		return {this->x / factor, this->y / factor};
 	}
 
-	inline bool operator==(const Vector2D &that) const {
+	inline bool operator==(const Vector2D& that) const {
 		return this->x == that.x && this->y == that.y;
 	}
-	inline bool operator!=(const Vector2D &that) const {
+	inline bool operator!=(const Vector2D& that) const {
 		return this->x != that.x || this->y != that.y;
 	}
 
-	friend Vector2D operator-(const Vector2D &right) {
+	friend Vector2D operator-(const Vector2D& right) {
 		return Vector2D(-right.x, -right.y);
 	}
 
-	friend Vector2D operator*(dataType left, const Vector2D &right) {
+	friend Vector2D operator*(dataType left, const Vector2D& right) {
 		return Vector2D(right.x * left, right.y * left);
 	}
 
@@ -96,17 +96,17 @@ class Vector2D {
 
 	inline Vector2D unit() const { return *this / this->len(); };
 
-	inline dataType dot(const Vector2D &that) const {
+	inline dataType dot(const Vector2D& that) const {
 		return this->x * that.x + this->y * that.y;
 	}
-	inline dataType cross(const Vector2D &that) const {
+	inline dataType cross(const Vector2D& that) const {
 		return this->x * that.y - this->y * that.x;
 	}
 
-	inline Vector2D proj(const Vector2D &that) const {
+	inline Vector2D proj(const Vector2D& that) const {
 		return that.unit() * this->dot(that);
 	}
-	inline Vector2D projOnUnit(const Vector2D &that) const {
+	inline Vector2D projOnUnit(const Vector2D& that) const {
 		return that * this->dot(that);
 	}
 
@@ -123,7 +123,7 @@ class Vector2D {
 			return std::make_pair(0.0f, Vector2D(0.0f, 0.0f));
 		return std::make_pair(mag, this->operator/(mag));
 	}
-	friend std::ostream &operator<<(std::ostream &out, Vector2D const &v) {
+	friend std::ostream& operator<<(std::ostream& out, Vector2D const& v) {
 		out.precision(std::numeric_limits<double>::max_digits10);
 		return out << "(" << v.x << ", " << v.y << ")";
 	}
@@ -141,7 +141,7 @@ class Vector2D {
 ///	\return Squared Distance
 ////////////////////////////////////////////////////////////
 inline dataType distFromLine(
-	const Vector2D &start, const Vector2D &end, const Vector2D &pt) {
+	const Vector2D& start, const Vector2D& end, const Vector2D& pt) {
 	dataType param = (pt - start).dot(end - start) / (end - start).lenSq();
 	if (param < 0) return (start - pt).lenSq();
 	if (param > 1)

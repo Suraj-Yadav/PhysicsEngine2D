@@ -14,8 +14,11 @@ static void BM_IntervalTree(benchmark::State& state) {
 	for (auto _ : state) {
 		state.PauseTiming();
 		if (dataFilled != state.range(0)) {
-			const auto left = -40 * state.range(0), right = 40 * state.range(0),
-					   bottom = -40 * state.range(0), top = 40 * state.range(0);
+			auto size = 40.0f;
+			const auto left = -size * state.range(0),
+					   right = size * state.range(0),
+					   bottom = -size * state.range(0),
+					   top = size * state.range(0);
 			std::uniform_real_distribution<> x(left, right);
 			std::uniform_real_distribution<> y(bottom, top);
 			sim.clear();
@@ -40,8 +43,11 @@ static void BM_KdTree(benchmark::State& state) {
 	for (auto _ : state) {
 		state.PauseTiming();
 		if (dataFilled != state.range(0)) {
-			const auto left = -40 * state.range(0), right = 40 * state.range(0),
-					   bottom = -40 * state.range(0), top = 40 * state.range(0);
+			auto size = 40.0f;
+			const auto left = -size * state.range(0),
+					   right = size * state.range(0),
+					   bottom = -size * state.range(0),
+					   top = size * state.range(0);
 			std::uniform_real_distribution<> x(left, right);
 			std::uniform_real_distribution<> y(bottom, top);
 			sim.clear();

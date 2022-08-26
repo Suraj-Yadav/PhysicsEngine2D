@@ -12,19 +12,19 @@
 #include "Shapes.hpp"
 
 class ForceField {
-	std::function<Vector2D(const DynamicShape &, const ForceField &)> func;
+	std::function<Vector2D(const DynamicShape&, const ForceField&)> func;
 
    public:
 	Vector2D pos;
 	ForceField(
-		const std::function<Vector2D(const DynamicShape &, const ForceField &)>
-			&f,
-		const Vector2D &p = Vector2D())
+		const std::function<Vector2D(const DynamicShape&, const ForceField&)>&
+			f,
+		const Vector2D& p = Vector2D())
 		: func(f), pos(p) {}
-	Vector2D getForce(const DynamicShape &obj) const {
+	Vector2D getForce(const DynamicShape& obj) const {
 		return func(obj, *this);
 	}
-	void setPos(const Vector2D &p) { pos = p; }
+	void setPos(const Vector2D& p) { pos = p; }
 };
 
 class Simulator {
@@ -45,10 +45,10 @@ class Simulator {
 	void updateReferences();
 
 	template <typename T1, typename T2>
-	bool manageCollision(T1 &t1, T2 &t2, float);
+	bool manageCollision(T1& t1, T2& t2, float);
 
 	template <typename T, typename... Args>
-	void addObject(std::vector<T> &vec, Args &&...args) {
+	void addObject(std::vector<T>& vec, Args&&... args) {
 		vec.emplace_back(args...);
 		invalidateReferences();
 	}
@@ -59,24 +59,24 @@ class Simulator {
 	float nBodyGravity;
 	Simulator(
 		unsigned subStep = 10, float restitutionCoeff = 1.0f,
-		float frictionCoeff = 0.5f, float nBodyGravity = false);
+		float frictionCoeff = 0.5f, float nBodyGravity = 0.0f);
 
-	const std::vector<Line> &getLines() const;
-	const std::vector<Particle> &getParticles() const;
-	const std::vector<Ball> &getBalls() const;
-	const std::vector<Box> &getBoxes() const;
-	const std::vector<std::reference_wrapper<BaseShape>> &getBaseShapes() const;
+	const std::vector<Line>& getLines() const;
+	const std::vector<Particle>& getParticles() const;
+	const std::vector<Ball>& getBalls() const;
+	const std::vector<Box>& getBoxes() const;
+	const std::vector<std::reference_wrapper<BaseShape>>& getBaseShapes() const;
 
-	template <typename... Args> inline void addLine(Args &&...args) {
+	template <typename... Args> inline void addLine(Args&&... args) {
 		addObject(lines, args...);
 	}
-	template <typename... Args> inline void addParticle(Args &&...args) {
+	template <typename... Args> inline void addParticle(Args&&... args) {
 		addObject(particles, args...);
 	}
-	template <typename... Args> inline void addBall(Args &&...args) {
+	template <typename... Args> inline void addBall(Args&&... args) {
 		addObject(balls, args...);
 	}
-	template <typename... Args> inline void addBox(Args &&...args) {
+	template <typename... Args> inline void addBox(Args&&... args) {
 		addObject(balls, args...);
 	}
 

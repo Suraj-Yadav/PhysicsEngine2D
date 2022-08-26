@@ -21,13 +21,13 @@ template <class ValueType> class RangeTree2D {
 	};
 
 	struct YNode {
-		const Meta *meta;
+		const Meta* meta;
 		int left, right;
 
 		YNode() : meta(nullptr), left(NULL_NODE), right(NULL_NODE) {}
-		YNode(const Meta *d) : meta(d), left(NULL_NODE), right(NULL_NODE) {}
+		YNode(const Meta* d) : meta(d), left(NULL_NODE), right(NULL_NODE) {}
 
-		inline bool operator<(const YNode &that) {
+		inline bool operator<(const YNode& that) {
 			return comparePair(
 				this->meta->point.y, that.meta->point.y,
 				comparePair(
@@ -39,14 +39,14 @@ template <class ValueType> class RangeTree2D {
 	};
 
 	struct XNode {
-		Meta *meta;
+		Meta* meta;
 		int left, right;
 		int yTreeIndex;
 		Range<dataType> range;
 
 		XNode() : meta(nullptr), range(0, 0) {}
 
-		friend std::ostream &operator<<(std::ostream &out, XNode const &v) {
+		friend std::ostream& operator<<(std::ostream& out, XNode const& v) {
 			out.precision(std::numeric_limits<double>::max_digits10);
 			out << "[ ";
 			if (v.meta != nullptr) {
@@ -57,11 +57,11 @@ template <class ValueType> class RangeTree2D {
 					   << ", right=" << v.right << "]";
 		}
 
-		inline bool operator<(const XNode &that) const {
+		inline bool operator<(const XNode& that) const {
 			return this->meta->point.x < that.meta->point.x;
 		}
 
-		std::string toGraphvizNode(const std::vector<YNode> &yTree) {
+		std::string toGraphvizNode(const std::vector<YNode>& yTree) {
 			std::stringstream out;
 			if (meta != nullptr) {
 				out << "[ label = \"{ value=" << meta->value
@@ -70,7 +70,7 @@ template <class ValueType> class RangeTree2D {
 			else {
 				out << "[ label = \"{ range=" << range << "| left=" << left
 					<< "| right=" << right << "| yTree=(";
-				for (auto &elem : yTree)
+				for (auto& elem : yTree)
 					write(
 						out, "(", elem.meta->value, elem.left, elem.right, ")");
 				out << ")}\" ]";
@@ -116,7 +116,7 @@ template <class ValueType> class RangeTree2D {
 		int left = build2DRangeTree(i, mid);
 
 		int subRootIndex = getNextFreeNode();
-		auto &subRoot = xNodes[subRootIndex];
+		auto& subRoot = xNodes[subRootIndex];
 
 		if (left != NULL_NODE) {
 			subRoot.range.start = xNodes[left].range.start;
@@ -182,7 +182,7 @@ template <class ValueType> class RangeTree2D {
 		// 	std::cout, "ASY dot(%,L=Label(\"%,%\"));\n", xNodes[root].point,
 		// 	xNodes[root].value, xNodes[root].isLeaf ? "*" : "");
 		print(root, debug(xNodes[root]), "yTree=(");
-		for (auto &elem : yTrees[root])
+		for (auto& elem : yTrees[root])
 			print("(", elem.meta->value, elem.left, elem.right, ")");
 		printLn(")");
 		writeF(
@@ -231,8 +231,8 @@ template <class ValueType> class RangeTree2D {
 	}
 
 	void inRange(
-		int x, int yStart, const Range2D<dataType> &range2d,
-		std::vector<ValueType> &insides) {
+		int x, int yStart, const Range2D<dataType>& range2d,
+		std::vector<ValueType>& insides) {
 		if (x == NULL_NODE) {
 			return;
 		}
@@ -267,8 +267,8 @@ template <class ValueType> class RangeTree2D {
 	RangeTree2D()
 		: RangeTree2D(std::vector<Vector2D>(0), std::vector<ValueType>(0)) {}
 	RangeTree2D(
-		const std::vector<Vector2D> &points,
-		const std::vector<ValueType> &values)
+		const std::vector<Vector2D>& points,
+		const std::vector<ValueType>& values)
 		: N(points.size()) {
 		if (points.size() != values.size()) {
 			throw std::invalid_argument(
@@ -287,7 +287,7 @@ template <class ValueType> class RangeTree2D {
 		for (size_t i = 0; i < N; i++) {
 			data[i].point = points[i];
 			data[i].value = values[i];
-			auto &node = xNodes[N + i];
+			auto& node = xNodes[N + i];
 			node.meta = &data[i];
 			node.range.start = node.range.end = points[i].x;
 			node.yTreeIndex = N + i;
@@ -301,7 +301,7 @@ template <class ValueType> class RangeTree2D {
 		// printTree(1);
 	}
 
-	auto rangeQuery(const Range2D<dataType> &range2d) {
+	auto rangeQuery(const Range2D<dataType>& range2d) {
 		std::vector<ValueType> insides;
 		insides.reserve(N / 4);
 		if (N == 0) {
@@ -320,7 +320,6 @@ template <class ValueType> class RangeTree2D {
 			1, std::distance(yTrees[1].begin(), yStartIter), range2d, insides);
 		return insides;
 	}
-	void debugDraw(std::ostream &out) {}
 };
 
 #endif	// RANGE_TREE_2D_HPP

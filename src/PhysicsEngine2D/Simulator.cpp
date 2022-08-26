@@ -7,13 +7,13 @@
 #include <set>
 #include <vector>
 
-inline std::ostream &operator<<(std::ostream &out, const ShapeType &type) {
+inline std::ostream& operator<<(std::ostream& out, const ShapeType& type) {
 	return out << getShapeTypeName(type);
 }
 
 inline bool operator<(
-	const std::reference_wrapper<BaseShape> &a,
-	const std::reference_wrapper<BaseShape> &b) {
+	const std::reference_wrapper<BaseShape>& a,
+	const std::reference_wrapper<BaseShape>& b) {
 	return a.get().left < b.get().left;
 }
 
@@ -31,20 +31,20 @@ void Simulator::addForceField(const ForceField forceField) {
 
 void Simulator::invalidateReferences() { areReferencesValid = false; }
 
-const std::vector<Line> &Simulator::getLines() const { return lines; }
+const std::vector<Line>& Simulator::getLines() const { return lines; }
 
-const std::vector<Particle> &Simulator::getParticles() const {
+const std::vector<Particle>& Simulator::getParticles() const {
 	return particles;
 }
 
-const std::vector<std::reference_wrapper<BaseShape>> &Simulator::getBaseShapes()
+const std::vector<std::reference_wrapper<BaseShape>>& Simulator::getBaseShapes()
 	const {
 	return baseShapes;
 }
 
-const std::vector<Ball> &Simulator::getBalls() const { return balls; }
+const std::vector<Ball>& Simulator::getBalls() const { return balls; }
 
-const std::vector<Box> &Simulator::getBoxes() const { return boxes; }
+const std::vector<Box>& Simulator::getBoxes() const { return boxes; }
 
 void Simulator::updateReferences() {
 	if (areReferencesValid) {
@@ -57,29 +57,30 @@ void Simulator::updateReferences() {
 	baseShapes.reserve(
 		balls.size() + particles.size() + boxes.size() + lines.size());
 
-	for (auto &elem : balls) {
+	for (auto& elem : balls) {
 		dynamicShapes.emplace_back(elem);
 		baseShapes.emplace_back(elem);
 	}
 
-	for (auto &elem : particles) {
+	for (auto& elem : particles) {
 		dynamicShapes.emplace_back(elem);
 		baseShapes.emplace_back(elem);
 	}
 
-	for (auto &elem : boxes) {
+	for (auto& elem : boxes) {
 		dynamicShapes.emplace_back(elem);
 		baseShapes.emplace_back(elem);
 	}
 
-	for (auto &elem : lines) {
+	for (auto& elem : lines) {
 		baseShapes.emplace_back(elem);
 	}
 
 	std::sort(baseShapes.begin(), baseShapes.end());
+	areReferencesValid = true;
 }
 
-template <> bool Simulator::manageCollision(Ball &b, Line &l, float) {
+template <> bool Simulator::manageCollision(Ball& b, Line& l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.rad * b.rad) {
 		dist = sqrt(dist) - b.rad;
@@ -87,7 +88,7 @@ template <> bool Simulator::manageCollision(Ball &b, Line &l, float) {
 		if (b.vel.dot(l.normal) < 0.0) {
 			const auto normalComp = (b.vel * b.mass).projOnUnit(l.normal),
 					   normalImpulse = -(1 + restitutionCoeff) * normalComp;
-			const auto &&[tangentialCompMag, tangentialCompDir] =
+			const auto&& [tangentialCompMag, tangentialCompDir] =
 				(b.vel * b.mass - normalComp -
 				 b.angVel * b.inertia * b.rad * l.normal.rotate(1, 0))
 					.getMagnitudeAndDirection();
@@ -105,7 +106,7 @@ template <> bool Simulator::manageCollision(Ball &b, Line &l, float) {
 
 template <>
 bool Simulator::manageCollision(
-	Particle &first, Particle &second, float delTime) {
+	Particle& first, Particle& second, float delTime) {
 	Vector2D n = second.pos - first.pos;
 	float dist = n.lenSq();
 	if (dist <= (first.rad + second.rad) * (first.rad + second.rad)) {
@@ -128,7 +129,7 @@ bool Simulator::manageCollision(
 	return false;
 }
 
-template <> bool Simulator::manageCollision(Box &b, Line &l, float) {
+template <> bool Simulator::manageCollision(Box& b, Line& l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.w * b.h) {
 		dist = sqrt(dist) - sqrt(b.w * b.h);
@@ -145,7 +146,7 @@ template <> bool Simulator::manageCollision(Box &b, Line &l, float) {
 	return false;
 }
 
-template <> bool Simulator::manageCollision(Particle &b, Line &l, float) {
+template <> bool Simulator::manageCollision(Particle& b, Line& l, float) {
 	float dist = distFromLine(l.start, l.end, b.pos);
 	if (dist <= b.rad * b.rad) {
 		dist = sqrt(dist) - b.rad;
@@ -170,18 +171,18 @@ void Simulator::simulate(float seconds) {
 	updateReferences();
 	const float delta = seconds / subStep;
 	for (unsigned step = 0; step < subStep; ++step) {
-		for (auto &objRef : dynamicShapes) {
-			auto &obj = objRef.get();
+		for (auto& objRef : dynamicShapes) {
+			auto& obj = objRef.get();
 			obj.move(delta);
-			for (const auto &forceField : forceFields) {
+			for (const auto& forceField : forceFields) {
 				obj.applyImpulse(forceField.getForce(obj) * delta, obj.pos);
 			}
 		}
 		if (nBodyGravity > 0) {
 			for (size_t i = 0; i < dynamicShapes.size(); i++) {
-				auto &a = dynamicShapes[i].get();
+				auto& a = dynamicShapes[i].get();
 				for (size_t j = i + 1; j < dynamicShapes.size(); j++) {
-					auto &b = dynamicShapes[j].get();
+					auto& b = dynamicShapes[j].get();
 					auto const [mag, dir] =
 						(b.pos - a.pos).getMagnitudeAndDirection();
 					auto impulse =
@@ -194,7 +195,7 @@ void Simulator::simulate(float seconds) {
 
 		const auto possibleCollisions = getCollisionBruteForceSAT(baseShapes);
 
-		for (auto &p : possibleCollisions) {
+		for (auto& p : possibleCollisions) {
 			auto &firstObj = baseShapes[p.first].get(),
 				 &secondObj = baseShapes[p.second].get();
 			ShapeType firstType = firstObj.getClass(),
@@ -202,18 +203,18 @@ void Simulator::simulate(float seconds) {
 
 			if (firstType == LINE && secondType == PARTICLE) {
 				manageCollision(
-					static_cast<Particle &>(secondObj),
-					static_cast<Line &>(firstObj), seconds);
+					static_cast<Particle&>(secondObj),
+					static_cast<Line&>(firstObj), seconds);
 			}
 			else if (firstType == PARTICLE && secondType == LINE) {
 				manageCollision(
-					static_cast<Particle &>(firstObj),
-					static_cast<Line &>(secondObj), seconds);
+					static_cast<Particle&>(firstObj),
+					static_cast<Line&>(secondObj), seconds);
 			}
 			else if (firstType == PARTICLE && secondType == PARTICLE) {
 				manageCollision(
-					static_cast<Particle &>(firstObj),
-					static_cast<Particle &>(secondObj), seconds);
+					static_cast<Particle&>(firstObj),
+					static_cast<Particle&>(secondObj), seconds);
 			}
 		}
 	}

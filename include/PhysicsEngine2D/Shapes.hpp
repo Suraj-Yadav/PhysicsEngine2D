@@ -7,7 +7,7 @@
 #include "Constants.hpp"
 #include "Vector2D.hpp"
 
-std::ostream &operator<<(std::ostream &out, const ShapeType &type);
+std::ostream& operator<<(std::ostream& out, const ShapeType& type);
 class BaseShape {
    protected:
 	inline void setBounds(
@@ -22,14 +22,14 @@ class BaseShape {
 	BaseShape() : top(0), left(0), right(0), bottom(0) {}
 	virtual ~BaseShape() {}
 	virtual ShapeType getClass() { return BASESHAPE; }
-	bool intersects(const BaseShape &anotherShape) const {
+	bool intersects(const BaseShape& anotherShape) const {
 		if (this->right < anotherShape.left) return false;
 		if (this->left > anotherShape.right) return false;
 		if (this->top < anotherShape.bottom) return false;
 		if (this->bottom > anotherShape.top) return false;
 		return true;
 	}
-	friend std::ostream &operator<<(std::ostream &out, BaseShape const &) {
+	friend std::ostream& operator<<(std::ostream& out, BaseShape const&) {
 		return out << "BaseShape"
 				   << "[]";
 	}
@@ -41,10 +41,10 @@ class DynamicShape : public BaseShape {
 	virtual void updateAABB(double delTime) = 0;
 
    public:
-	DynamicShape(const Vector2D &pos, const Vector2D &vel, double m)
+	DynamicShape(const Vector2D& pos, const Vector2D& vel, double m)
 		: pos(pos), vel(vel), mass(m), invMass(1.0 / m) {}
 	virtual ~DynamicShape() {}
-	virtual void applyImpulse(const Vector2D &imp, const Vector2D &) {
+	virtual void applyImpulse(const Vector2D& imp, const Vector2D&) {
 		vel += imp * invMass;
 	}
 	virtual void move(double delTime) {
@@ -52,11 +52,11 @@ class DynamicShape : public BaseShape {
 		updateAABB(delTime);
 	}
 	virtual ShapeType getClass() { return DYNAMICSHAPE; }
-	friend std::ostream &operator<<(std::ostream &out, DynamicShape const &b) {
+	friend std::ostream& operator<<(std::ostream& out, DynamicShape const& b) {
 		return out << "DynamicShape"
 				   << "["
 				   << "pos:" << b.pos << ", vel:" << b.vel << ", "
-				   << static_cast<const BaseShape &>(b) << "]";
+				   << static_cast<const BaseShape&>(b) << "]";
 	}
 
 	Vector2D pos;
@@ -74,25 +74,17 @@ class Particle final : public DynamicShape {
 	}
 
    public:
-	Particle(const Vector2D &pos, const Vector2D &vel, double m, double r)
+	Particle(const Vector2D& pos, const Vector2D& vel, double m, double r)
 		: DynamicShape(pos, vel, m), rad(r) {
 		updateAABB(0);
 	}
 	~Particle() {}
 	ShapeType getClass() { return PARTICLE; }
-	friend std::ostream &operator<<(std::ostream &out, Particle const &b) {
+	friend std::ostream& operator<<(std::ostream& out, Particle const& b) {
 		return out << "Particle"
 				   << "["
 				   << "rad:" << b.rad << ", "
-				   << static_cast<const DynamicShape &>(b) << "]";
-	}
-
-	void debugDraw(std::ostream &out, std::string label) const {
-		// writeF(
-		// 	out, "draw(circle(%, %), blue,
-		// L=Label(\"%\",overwrite(Move)));\n", 	pos, rad, label);
-		// writeF( 	out, "draw(box(%, %));\n", Vector2D(left, top),
-		// 	Vector2D(right, bottom));
+				   << static_cast<const DynamicShape&>(b) << "]";
 	}
 
 	double rad;
@@ -101,7 +93,7 @@ class Particle final : public DynamicShape {
 class RigidShape : public DynamicShape {
    public:
 	RigidShape(
-		const Vector2D &pos, const Vector2D &vel, double m, double i,
+		const Vector2D& pos, const Vector2D& vel, double m, double i,
 		double a = 0, double aV = 0)
 		: DynamicShape(pos, vel, m),
 		  inertia(i),
@@ -109,7 +101,7 @@ class RigidShape : public DynamicShape {
 		  angle(a),
 		  angVel(aV) {}
 	virtual ~RigidShape() {}
-	void applyImpulse(const Vector2D &imp, const Vector2D &point) {
+	void applyImpulse(const Vector2D& imp, const Vector2D& point) {
 		angVel += (point - pos).cross(imp) * invInertia;
 		vel += imp * invMass;
 	}
@@ -118,11 +110,11 @@ class RigidShape : public DynamicShape {
 		angle += angVel * delTime;
 		updateAABB(delTime);
 	}
-	friend std::ostream &operator<<(std::ostream &out, RigidShape const &b) {
+	friend std::ostream& operator<<(std::ostream& out, RigidShape const& b) {
 		return out << "RigidShape"
 				   << "["
 				   << "angle:" << b.angle << ", angVel:" << b.angVel << ", "
-				   << static_cast<const DynamicShape &>(b) << "]";
+				   << static_cast<const DynamicShape&>(b) << "]";
 	}
 	double inertia, invInertia, angle, angVel;
 };
@@ -139,7 +131,7 @@ class Ball final : public RigidShape {
 
    public:
 	Ball(
-		const Vector2D &initialPosition, const Vector2D &initialVelocity,
+		const Vector2D& initialPosition, const Vector2D& initialVelocity,
 		double mass, double radius, double initialAngle = 0,
 		double initialAngularVelocity = 0)
 		: RigidShape(
@@ -151,9 +143,9 @@ class Ball final : public RigidShape {
 	}
 	~Ball() {}
 	ShapeType getClass() { return BALL; }
-	friend std::ostream &operator<<(std::ostream &out, Ball const &b) {
+	friend std::ostream& operator<<(std::ostream& out, Ball const& b) {
 		return out << "Ball"
-				   << "[" << static_cast<const RigidShape &>(b) << "]";
+				   << "[" << static_cast<const RigidShape&>(b) << "]";
 	}
 	double rad;
 };
@@ -180,7 +172,7 @@ class Box final : public RigidShape {
 	}
 
    public:
-	Box(const Vector2D &pos, const Vector2D &vel, double mass, double width,
+	Box(const Vector2D& pos, const Vector2D& vel, double mass, double width,
 		double height, double initialAngle = 0,
 		double initialAngularVelocity = 0)
 		: RigidShape(
@@ -199,7 +191,7 @@ class Box final : public RigidShape {
 
 class Line final : public BaseShape {
    public:
-	Line(const Vector2D &a, const Vector2D &b)
+	Line(const Vector2D& a, const Vector2D& b)
 		: start(a),
 		  end(b),
 		  normal((b - a).rotate(1, 0).unit()),
@@ -213,18 +205,12 @@ class Line final : public BaseShape {
 	}
 	~Line() {}
 	ShapeType getClass() { return LINE; }
-	friend std::ostream &operator<<(std::ostream &out, Line const &b) {
+	friend std::ostream& operator<<(std::ostream& out, Line const& b) {
 		return out << "Line"
 				   << "["
 				   << "start:" << b.start << ", end:" << b.end << ", normal"
-				   << b.normal << ", " << static_cast<const BaseShape &>(b)
+				   << b.normal << ", " << static_cast<const BaseShape&>(b)
 				   << "]";
-	}
-
-	void debugDraw(std::ostream &out, std::string label) const {
-		// writeF(
-		// 	out, "draw( % -- %, L=Label(\"%\",overwrite(Move)));\n", start,
-		// end, 	label);
 	}
 
 	Vector2D start;

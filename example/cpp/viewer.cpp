@@ -1,4 +1,8 @@
 #define _USE_MATH_DEFINES
+#include <GLFW/glfw3.h>	 // Will drag system OpenGL headers
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <imgui.h>
 
 #ifdef __APPLE__
 #include <gperftools/profiler.h>
@@ -6,7 +10,6 @@
 
 #include <PhysicsEngine2D/Simulator.hpp>
 #include <PhysicsEngine2D/util.hpp>
-#include <TGUI/TGUI.hpp>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -16,68 +19,53 @@
 
 #include "drawUtil.hpp"
 
-Vector2D gravity(const DynamicShape &a, const ForceField &f) {
-	return 6.67408e-11 * (f.pos - a.pos).unit() * a.mass /
-		   (a.pos - f.pos).lenSq();
+static void glfw_error_callback(int error, const char* description) {
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void initialize(
-	const std::filesystem::path filePath, sf::RenderWindow &window,
-	sf::RenderWindow &controllerWindow, tgui::Gui &gui, Simulator &sim) {
-	std::ifstream file(filePath.string());
-	std::string line;
-	std::string type;
+GLFWwindow* setupWindow(const ViewPort& view, const std::string& title) {
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit()) return nullptr;
 
-	const float scale =
-		std::max(sf::VideoMode::getDesktopMode().width / 1920.0, 1.0);
+	const char* glsl_version = "#version 130";
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	// 3.2+
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);			// 3.0+ only
 
-	controllerWindow.setSize({unsigned(300 * scale), unsigned(300 * scale)});
-	controllerWindow.setPosition({200, 200});
-	controllerWindow.setView(sf::View({0, 0, 600, 600}));
-	gui.setView(controllerWindow.getView());
+	// Create window with graphics context
+	GLFWwindow* window = glfwCreateWindow(
+		view.windowSize.x, view.windowSize.y, title.c_str(), NULL, NULL);
+	if (window == NULL) return nullptr;
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);  // Enable vsync
 
-	window.setPosition({static_cast<int>(200 + 300 * scale), 200});
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	io.ConfigFlags |=
+		ImGuiConfigFlags_NavEnableKeyboard;	 // Enable Keyboard Controls
+	io.ConfigFlags |=
+		ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
+	io.ConfigFlags |=
+		ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport / Platform
+										   // Windows
 
-	for (size_t lineNumber = 1; std::getline(file, line); lineNumber++) {
-		std::istringstream iss(line);
-		iss >> type;
-		try {
-			if (type.front() == '#') {
-			}
-			else if (type == "SIZE") {
-				unsigned W, H;
-				double left, top, right, bottom;
-				if (!(iss >> W >> H >> left >> top >> right >> bottom)) {
-					throw std::invalid_argument("Invalid 'SIZE' input");
-				}
-				window.setSize({unsigned(W * scale), unsigned(H * scale)});
-				sf::View view(
-					sf::FloatRect(left, top, right - left, bottom - top));
-				view.setViewport({0.0f, 0.0f, 1.0f, 1.0f});
-				window.setView(view);
-			}
-			else if (type == "TITLE") {
-				std::string title;
-				if (!(std::getline(iss, title))) {
-					throw std::invalid_argument("Invalid 'TITLE' input");
-				}
-				window.setTitle(title);
-			}
-			else if (type == "END") {
-				break;
-			}
-		}
-		catch (const std::exception &e) {
-			print_exception(e);
-			throw;
-		}
-	}
-	initialize(filePath, sim);
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	ImGui::StyleColorsLight();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	return window;
 }
 
-int main(int argc, char **argv) {
-	NORMAL_IO_SPEEDUP;
-
+int main(int argc, char** argv) {
 	std::vector<std::string> args;
 	for (int i = 0; i < argc; i++) {
 		args.emplace_back(argv[i]);
@@ -92,208 +80,106 @@ int main(int argc, char **argv) {
 
 	Simulator sim(10, 0.9f, 0.9f);
 
-	sf::RenderWindow controllerWindow(
-		sf::VideoMode(400, 400), "Controls", sf::Style::Close,
-		sf::ContextSettings(0, 0, 8));
-
-	sf::RenderWindow window(
-		sf::VideoMode(800, 800), "Drawing Area", sf::Style::Close,
-		sf::ContextSettings(0, 0, 8));
-
-	tgui::Gui gui(controllerWindow);
-
-	initialize(initFilePath, window, controllerWindow, gui, sim);
-
-	DrawUtil drawUtil(window, "2Dumb");
+	DrawUtil drawUtil(initFilePath, sim);
 
 	bool showBox = false;
+	bool pauseSimulation = false;
+	double time = 0, lastTime = glfwGetTime();
 
-	gui.loadWidgetsFromFile((rootPath / "controller.form").string());
+	auto window = setupWindow(drawUtil.view, drawUtil.title);
+	if (!window) {
+		return -1;
+	}
 
-	auto resetButton = gui.get<tgui::Button>("resetButton");
-	auto checkbox = gui.get<tgui::CheckBox>("checkbox");
-	auto restitutionSlider = gui.get<tgui::Slider>("restitutionSlider");
-	auto restitutionCoeffLabel = gui.get<tgui::Label>("restitutionCoeffLabel");
-	auto frictionSlider = gui.get<tgui::Slider>("frictionSlider");
-	auto frictionCoeffLabel = gui.get<tgui::Label>("frictionCoeffLabel");
-	auto gravitySlider = gui.get<tgui::Slider>("gravitySlider");
-	auto gravityLabel = gui.get<tgui::Label>("gravityLabel");
-	auto timeLabel = gui.get<tgui::Label>("timeLabel");
-
-	checkbox->setChecked(showBox);
-	checkbox->connect(
-		{"Checked", "Unchecked"}, [&showBox](bool value) { showBox = value; });
-
-	restitutionSlider->setValue(sim.restitutionCoeff * 100);
-	restitutionCoeffLabel->setText(std::to_string(sim.restitutionCoeff));
-	restitutionSlider->connect(
-		"ValueChanged", [&restitutionCoeffLabel, &sim](float value) {
-			restitutionCoeffLabel->setText(
-				std::to_string(sim.restitutionCoeff = value / 100.0f));
-		});
-
-	frictionSlider->setValue(sim.frictionCoeff * 100);
-	frictionCoeffLabel->setText(std::to_string(sim.frictionCoeff));
-	frictionSlider->connect(
-		"ValueChanged", [&frictionCoeffLabel, &sim](float value) {
-			frictionCoeffLabel->setText(
-				std::to_string(sim.frictionCoeff = value / 100.0f));
-		});
-
-	gravitySlider->setValue(sim.nBodyGravity * 100.0f);
-	gravityLabel->setText(std::to_string(sim.nBodyGravity));
-	gravitySlider->connect("ValueChanged", [&gravityLabel, &sim](float value) {
-		gravityLabel->setText(
-			std::to_string(sim.nBodyGravity = value / 100.0f));
-	});
-
-	double time = 0;
-	bool pauseSimulation = true;
-
-	resetButton->connect("pressed", [&]() {
-		initialize(initFilePath, window, controllerWindow, gui, sim);
-		time = 0;
-	});
-
-#ifdef __APPLE__
-	ProfilerStart("output.pprof");
-#endif
-
-	sf::Clock FPSClock;
-	while (window.isOpen() && controllerWindow.isOpen()) {
-		sf::Event event;
-		while (window.pollEvent(event)) {
-			switch (event.type) {
-				case sf::Event::Closed:
-					window.close();
-					controllerWindow.close();
-					break;
-				case sf::Event::KeyReleased: {
-					switch (event.key.code) {
-						case sf::Keyboard::Escape:
-							window.close(), controllerWindow.close();
-							break;
-						case sf::Keyboard::A: {
-							auto pos = window.mapPixelToCoords(
-								sf::Mouse::getPosition(window));
-							sim.addParticle(
-								Particle({pos.x, pos.y}, {0.0, 0.0}, 1, 1));
-							break;
-						}
-						case sf::Keyboard::Space:
-							pauseSimulation = !pauseSimulation;
-							break;
-						case sf::Keyboard::R:
-							initialize(
-								initFilePath, window, controllerWindow, gui,
-								sim);
-							time = 0;
-							break;
-						case sf::Keyboard::P:
-							for (const auto &elem : sim.getLines()) {
-								printLn("LINE", elem.start, elem.end);
-							}
-							for (const auto &elem : sim.getParticles()) {
-								printLn("PARTICLE", elem.pos);
-							}
-							break;
-						default:
-							break;
-					}
-				}
-				default:
-					break;
-			}
-		}
-		while (controllerWindow.pollEvent(event)) {
-			switch (event.type) {
-				case sf::Event::Closed:
-					window.close();
-					controllerWindow.close();
-					break;
-				case sf::Event::KeyReleased: {
-					if (event.key.code == sf::Keyboard::Escape) {
-						window.close();
-						controllerWindow.close();
-					}
-					break;
-				}
-				default:
-					gui.handleEvent(event);
-					break;
-			}
-		}
+	// Main loop
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
 
 		if (!pauseSimulation) {
-			auto timeLapse = std::min(FPSClock.restart(), sf::seconds(0.1));
-			time += timeLapse.asSeconds();
-			sim.simulate(timeLapse.asSeconds());
-			timeLabel->setText("Time: " + std::to_string(time) + " s");
+			auto now = glfwGetTime();
+			auto timeLapsed = std::min(now - lastTime, 0.1);
+			time += timeLapsed;
+			lastTime = now;
+			sim.simulate(timeLapsed);
 		}
 
-		window.clear();
-		controllerWindow.clear();
-		{
-			const auto view = window.getView();
-			const double left = view.getCenter().x - view.getSize().x / 2,
-						 right = view.getCenter().x + view.getSize().x / 2;
-			const double top = view.getCenter().y - view.getSize().y / 2,
-						 bottom = view.getCenter().y + view.getSize().y / 2;
-			drawUtil.quad(
-				{Vector2D(left, top), Vector2D(right, top),
-				 Vector2D(right, bottom), Vector2D(left, bottom)},
-				sf::Color::Red, 5);
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text(
+			"Time: %.2f secs, %.3f ms/frame (%.1f FPS)", time,
+			1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		if (ImGui::Button("Reset")) {
+			time = 0;
+			drawUtil = DrawUtil(initFilePath, sim);
 		}
-		for (auto &elem : sim.getBaseShapes()) {
+		ImGui::Checkbox("Show Bounding Boxes", &showBox);
+		ImGui::Checkbox("Pause Simulation", &pauseSimulation);
+		ImGui::SliderFloat(
+			"N Body Gravity", &sim.nBodyGravity, 0, 100, nullptr,
+			ImGuiSliderFlags_Logarithmic);
+		ImGui::SliderFloat("Coefficient of Friction", &sim.frictionCoeff, 0, 1);
+		ImGui::SliderFloat(
+			"Coefficient of Restitution", &sim.restitutionCoeff, 0, 1);
+
+		ImGui::End();
+
+		auto dl = ImGui::GetBackgroundDrawList();
+		for (auto& elem : sim.getBaseShapes()) {
 			if (showBox)
-				drawUtil.quad(
-					{Vector2D(elem.get().left, elem.get().top),
-					 Vector2D(elem.get().right, elem.get().top),
-					 Vector2D(elem.get().right, elem.get().bottom),
-					 Vector2D(elem.get().left, elem.get().bottom)},
-					sf::Color::Red);
+				drawUtil.rect(
+					dl, {elem.get().left, elem.get().top},
+					{elem.get().right, elem.get().bottom},
+					ImColor(1.0f, 0.0f, 0.0f));
 		}
 
-		for (auto &line : sim.getLines()) {
-			drawUtil.line(line.start, line.end, sf::Color::Green);
+		for (auto& line : sim.getLines()) {
+			drawUtil.line(dl, line.start, line.end, ImColor(0.0f, 1.0f, 0.0f));
 			if (showBox) {
 				drawUtil.line(
-					0.5 * line.start + 0.5 * line.end,
+					dl, 0.5 * line.start + 0.5 * line.end,
 					0.5 * line.start + 0.5 * line.end + line.normal,
-					sf::Color::Green);
+					ImColor(0.0f, 1.0f, 0.0f));
 			}
 		}
-		for (auto &particle : sim.getParticles()) {
-			drawUtil.drawCircle(particle.pos, particle.rad, sf::Color::Blue);
+
+		for (auto& particle : sim.getParticles()) {
+			drawUtil.drawCircle(
+				dl, particle.pos, particle.rad, ImColor(0.0f, 0.0f, 1.0f));
 			if (showBox) {
 				drawUtil.line(
-					particle.pos, particle.pos + particle.vel,
-					sf::Color::White);
+					dl, particle.pos, particle.pos + particle.vel,
+					ImColor(1.0f, 1.0f, 1.0f));
 			}
 		}
-		for (auto &ball : sim.getBalls()) {
-			drawUtil.drawCircle(ball.pos, ball.rad, sf::Color::Blue);
+		for (auto& ball : sim.getBalls()) {
+			drawUtil.drawCircle(
+				dl, ball.pos, ball.rad, ImColor(0.0f, 0.0f, 1.0f));
 			auto radiusVec =
 				Vector2D(std::cos(ball.angle), std::sin(ball.angle));
 			drawUtil.line(
-				ball.pos, ball.pos + ball.rad * radiusVec, sf::Color::Yellow);
+				dl, ball.pos, ball.pos + ball.rad * radiusVec,
+				ImColor(1.0f, 1.0f, 0.0f));
 			drawUtil.line(
-				ball.pos + radiusVec,
+				dl, ball.pos + radiusVec,
 				ball.pos + ball.rad * radiusVec +
 					ball.angVel * radiusVec.rotate(1, 0),
-				sf::Color::Yellow);
+				ImColor(1.0f, 1.0f, 0.0f));
 		}
-
-		drawUtil.finally();
-		gui.draw();
-		window.display();
-		controllerWindow.display();
+		// Rendering
+		drawUtil.finally(window);
 	}
-#ifdef __APPLE__
-	ProfilerStop();
-#endif
 
-	window.close();
-	controllerWindow.close();
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
+
 	return 0;
 }
